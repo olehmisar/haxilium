@@ -37,7 +37,7 @@ export default class DelegatedHaxballRoom {
 
             this._delegateCallbacks()
 
-            // integrate original RoomObject methods to framework
+            // Integrate original RoomObject methods to framework.
             Object.getOwnPropertyNames(this._room).forEach(prop => {
               if(typeof this._room[prop] == "function")
                 this[prop] = this._room[prop];
