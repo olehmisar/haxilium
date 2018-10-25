@@ -36,6 +36,12 @@ export default class DelegatedHaxballRoom {
             this._room = HBInit({ ...config, roomName, playerName, maxPlayers, isPublic, geo })
 
             this._delegateCallbacks()
+
+            // integrate original RoomObject methods to framework
+            Object.getOwnPropertyNames(this._room).forEach(prop => {
+              if(typeof this._room[prop] == "function")
+                this[prop] = this._room[prop];
+            });
         }
     }
 
@@ -53,29 +59,4 @@ export default class DelegatedHaxballRoom {
             }
         })
     }
-
-    /*
-     * Set methods of original room object to use and override them in the future.
-     */
-    sendChat(...args)          { return this._room.sendChat(...args) }
-    setPlayerAdmin(...args)    { return this._room.setPlayerAdmin(...args) }
-    setPlayerTeam(...args)     { return this._room.setPlayerTeam(...args) }
-    kickPlayer(...args)        { return this._room.kickPlayer(...args) }
-    clearBan(...args)          { return this._room.clearBan(...args) }
-    clearBans(...args)         { return this._room.clearBans(...args) }
-    setScoreLimit(...args)     { return this._room.setScoreLimit(...args) }
-    setTimeLimit(...args)      { return this._room.setTimeLimit(...args) }
-    setCustomStadium(...args)  { return this._room.setCustomStadium(...args) }
-    setDefaultStadium(...args) { return this._room.setDefaultStadium(...args) }
-    setTeamsLock(...args)      { return this._room.setTeamsLock(...args) }
-    setTeamColors(...args)     { return this._room.setTeamColors(...args) }
-    startGame(...args)         { return this._room.startGame(...args) }
-    stopGame(...args)          { return this._room.stopGame(...args) }
-    pauseGame(...args)         { return this._room.pauseGame(...args) }
-    getPlayer(...args)         { return this._room.getPlayer(...args) }
-    getPlayerList(...args)     { return this._room.getPlayerList(...args) }
-    getScores(...args)         { return this._room.getScores(...args) }
-    getBallPosition(...args)   { return this._room.getBallPosition(...args) }
-    startRecording(...args)    { return this._room.startRecording(...args) }
-    stopRecording(...args)     { return this._room.stopRecording(...args) }
 }
