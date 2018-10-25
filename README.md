@@ -1,2 +1,2 @@
 # haxilium.js
-Haxball Headless API framework for easy and quick development.
+Haxball Headless API Framework for easy and organized development.
