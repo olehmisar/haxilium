@@ -29,9 +29,13 @@ const delegatedCallbacks = [
 export default class DelegatedHaxballRoom {
     constructor(config) {
         window.onHBLoaded = () => {
-            this._room = HBInit(config)
+            this._room = window.HBInit(config)
             this._delegateMethods()
             this._delegateCallbacks()
+        }
+
+        if (window.HBInit) {
+            window.onHBLoaded()
         }
     }
 
