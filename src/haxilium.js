@@ -1,9 +1,10 @@
+import _ from 'lodash'
+import assert from 'assert'
+import deepFreeze from 'deep-freeze-strict'
+import setImmediate from 'set-immediate-shim'
+
 import DelegatedHaxballRoom from './delegated-haxball-room'
 import { isPlayerObject, parseAccessStrings } from './utils'
-import setImmediate from 'set-immediate-shim'
-import assert from 'assert'
-import _ from 'lodash'
-import deepFreeze from 'deep-freeze-strict'
 
 
 export default class Haxilium extends DelegatedHaxballRoom {

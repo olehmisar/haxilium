@@ -1,5 +1,6 @@
-import assert from 'assert'
 import _ from 'lodash'
+import assert from 'assert'
+
 
 const playerProps = 'id, name, team, admin, position'.split(', ')
 export function isPlayerObject(obj) {
