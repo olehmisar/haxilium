@@ -296,6 +296,9 @@ export default class Haxilium extends DelegatedHaxballRoom {
      */
     _resetCallbacks() {
         this._callbacks = {}
+
+        this.on('room-link', () => this._executeCallbacks('room-ready'))
+
         this.on('playerLeave', player => setImmediate(() => {
             delete this._players[player.id]
         }))
