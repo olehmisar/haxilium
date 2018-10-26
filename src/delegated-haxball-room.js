@@ -1,3 +1,6 @@
+import _ from 'lodash'
+
+
 /**
  * Original API callbacks' names.
  * @type {String[]}
@@ -40,8 +43,8 @@ export default class DelegatedHaxballRoom {
         }
     }
 
-    /*
-     * Delegate callbacks of original API.
+    /**
+     * Delegate callbacks of the original API.
      */
     _delegateCallbacks() {
         // Delegate original room callbacks to original room object
@@ -55,10 +58,15 @@ export default class DelegatedHaxballRoom {
         })
     }
 
+    /**
+     * Delegate methods of the original API.
+     */
     _delegateMethods() {
         // Delegate original room methods to framework.
         _.forOwn(this._room, prop => {
-            DelegatedHaxballRoom.prototype[prop] = this._room[prop]
+            if (_.isFunction(this._room[prop])) {
+                DelegatedHaxballRoom.prototype[prop] = this._room[prop]
+            }
         })
     }
 }
