@@ -57,9 +57,8 @@ export default class DelegatedHaxballRoom {
 
     _delegateMethods() {
         // Delegate original room methods to framework.
-        Object.getOwnPropertyNames(this._room).forEach(prop => {
-            if (_.isFunction(this._room[prop]))
-                DelegatedHaxballRoom.prototype[prop] = this._room[prop]
+        _.forOwn(this._room, prop => {
+            DelegatedHaxballRoom.prototype[prop] = this._room[prop]
         })
     }
 }
