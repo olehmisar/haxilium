@@ -35,13 +35,8 @@ export default class DelegatedHaxballRoom {
             const isPublic   = 'public' in config ? !!config.public : true
             this._room = HBInit({ ...config, roomName, playerName, maxPlayers, isPublic, geo })
 
+            this._delegateMethods()
             this._delegateCallbacks()
-
-            // Integrate original RoomObject methods to framework.
-            Object.getOwnPropertyNames(this._room).forEach(prop => {
-              if(_.isFunction(this._room[prop]))
-                this[prop] = this._room[prop];
-            });
         }
     }
 
@@ -57,6 +52,14 @@ export default class DelegatedHaxballRoom {
             this._room[rawCallbackName] = (...args) => {
                 return this._executeCallbacks(callbackName, this._wrapArguments(args))
             }
+        })
+    }
+
+    _delegateMethods() {
+        // Delegate original room methods to framework.
+        Object.getOwnPropertyNames(this._room).forEach(prop => {
+            if (_.isFunction(this._room[prop]))
+                DelegatedHaxballRoom.prototype[prop] = this._room[prop]
         })
     }
 }
