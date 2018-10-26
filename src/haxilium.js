@@ -3,6 +3,8 @@ import { isPlayerObject, parseAccessStrings } from './utils'
 import setImmediate from 'set-immediate-shim'
 import assert from 'assert'
 import _ from 'lodash'
+import deepFreeze from 'deep-freeze-strict'
+
 
 export default class Haxilium extends DelegatedHaxballRoom {
     SPECT = 0
@@ -309,6 +311,9 @@ export default class Haxilium extends DelegatedHaxballRoom {
         callbackName = _.camelCase(callbackName)
         const callbacks = this._callbacks[callbackName]
         if (!callbacks) return
+
+        // Freeze args to prevent changes in them.
+        deepFreeze(callbackArgs)
 
         // Store all results of calls of callbacks.
         const cbReturns = []

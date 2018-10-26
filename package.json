@@ -23,6 +23,7 @@
   "homepage": "https://github.com/olegmisar/haxilium.js#readme",
   "dependencies": {
     "assert": "^1.4.1",
+    "deep-freeze-strict": "^1.1.1",
     "lodash": "^4.17.11",
     "set-immediate-shim": "^2.0.0"
   },
