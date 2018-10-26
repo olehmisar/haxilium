@@ -22,6 +22,50 @@ export default class Haxilium extends DelegatedHaxballRoom {
     }
 
     /**
+     * Bind module to the room.
+     * @param {Object} module Module object. Include 'defaultState', 'methods', 'callbacks' and 'commands' fields.
+     */
+    bindModule(module) {
+        const { defaultState, methods, callbacks, commands } = module
+
+        // Register module callbacks.
+        let callbackUnbinds = []
+        if (_.isObject(callbacks)) {
+            callbackUnbinds = _.toPairs(callbacks).map(([eventName, callback]) =>
+                this.on(eventName, callback))
+        }
+
+        // Register module methods.
+        if (_.isObject(methods)) {
+            _.toPairs(methods).forEach(([methodName, method]) => {
+                // TODO: smarter method intersection detection.
+                // assert(_.isUndefined(this[methodName]),
+                //     `Module method intersection error. ${methodName} already exists on room object`)
+
+                this.method(methodName, method)
+            })
+        }
+
+        // Add commands.
+        if (_.isObject(commands)) {
+            // TODO: check commands intersection.
+            commands.forEach(command => this.addCommand(command))
+        }
+
+        // Merge module state with current state.
+        // TODO: check intersections for states.
+        if (_.isObject(defaultState)) {
+            this.state = _.merge(defaultState, this.state)
+        }
+
+        // TODO: unbind module.
+        // return function unbindModule() {
+        //     callbackUnbinds.forEach(unbind => unbind())
+
+        // }
+    }
+
+    /**
      * Bind callbacks to the room.
      * @param  {String}     callbackName Event name. Can be PascalCase, camelCase or kebab-case.
      * @param  {Function[]} callbacks    Array of functions which will be executed when event fires. Can be array of arrays of functions.
