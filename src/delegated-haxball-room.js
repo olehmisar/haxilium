@@ -28,16 +28,8 @@ const delegatedCallbacks = [
 
 export default class DelegatedHaxballRoom {
     constructor(config) {
-        config = config.room
         window.onHBLoaded = () => {
-            const roomName   = config.roomName   || config.name   || 'Headless Room'
-            const playerName = config.playerName || config.player || 'Host'
-            const maxPlayers = config.maxPlayers || 12
-            const password   = config.password   || undefined
-            const geo        = config.geo        || undefined
-            const isPublic   = 'public' in config ? !!config.public : true
-            this._room = HBInit({ ...config, roomName, playerName, maxPlayers, isPublic, geo })
-
+            this._room = HBInit(config)
             this._delegateMethods()
             this._delegateCallbacks()
         }
