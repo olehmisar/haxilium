@@ -1,3 +1,6 @@
+import _ from 'lodash'
+
+
 /**
  * Original API callbacks' names.
  * @type {String[]}
@@ -35,12 +38,13 @@ export default class DelegatedHaxballRoom {
             const isPublic   = 'public' in config ? !!config.public : true
             this._room = HBInit({ ...config, roomName, playerName, maxPlayers, isPublic, geo })
 
+            this._delegateMethods()
             this._delegateCallbacks()
         }
     }
 
-    /*
-     * Delegate callbacks of original API.
+    /**
+     * Delegate callbacks of the original API.
      */
     _delegateCallbacks() {
         // Delegate original room callbacks to original room object
@@ -54,28 +58,15 @@ export default class DelegatedHaxballRoom {
         })
     }
 
-    /*
-     * Set methods of original room object to use and override them in the future.
+    /**
+     * Delegate methods of the original API.
      */
-    sendChat(...args)          { return this._room.sendChat(...args) }
-    setPlayerAdmin(...args)    { return this._room.setPlayerAdmin(...args) }
-    setPlayerTeam(...args)     { return this._room.setPlayerTeam(...args) }
-    kickPlayer(...args)        { return this._room.kickPlayer(...args) }
-    clearBan(...args)          { return this._room.clearBan(...args) }
-    clearBans(...args)         { return this._room.clearBans(...args) }
-    setScoreLimit(...args)     { return this._room.setScoreLimit(...args) }
-    setTimeLimit(...args)      { return this._room.setTimeLimit(...args) }
-    setCustomStadium(...args)  { return this._room.setCustomStadium(...args) }
-    setDefaultStadium(...args) { return this._room.setDefaultStadium(...args) }
-    setTeamsLock(...args)      { return this._room.setTeamsLock(...args) }
-    setTeamColors(...args)     { return this._room.setTeamColors(...args) }
-    startGame(...args)         { return this._room.startGame(...args) }
-    stopGame(...args)          { return this._room.stopGame(...args) }
-    pauseGame(...args)         { return this._room.pauseGame(...args) }
-    getPlayer(...args)         { return this._room.getPlayer(...args) }
-    getPlayerList(...args)     { return this._room.getPlayerList(...args) }
-    getScores(...args)         { return this._room.getScores(...args) }
-    getBallPosition(...args)   { return this._room.getBallPosition(...args) }
-    startRecording(...args)    { return this._room.startRecording(...args) }
-    stopRecording(...args)     { return this._room.stopRecording(...args) }
+    _delegateMethods() {
+        // Delegate original room methods to framework.
+        _.forOwn(this._room, (value, key) => {
+            if (_.isFunction(value)) {
+                DelegatedHaxballRoom.prototype[key] = value
+            }
+        })
+    }
 }
