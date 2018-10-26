@@ -36,6 +36,8 @@ export default class DelegatedHaxballRoom {
 
         if (window.HBInit) {
             window.onHBLoaded()
+            // Remove callback to prevent second initialization.
+            window.onHBLoaded = () => {}
         }
     }
 
