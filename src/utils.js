@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import assert from 'assert'
+import setImmediate from 'set-immediate-shim'
 
 
 const playerProps = 'id, name, team, admin, position'.split(', ')
@@ -29,4 +30,9 @@ export function parseAccessStrings(strings) {
         }
     })
     return rights => fns.every(fn => fn(rights))
+}
+
+export function asyncify(fn) {
+    return (...args) =>
+        void setImmediate(() => fn(...args))
 }

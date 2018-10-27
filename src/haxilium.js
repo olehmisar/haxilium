@@ -4,7 +4,7 @@ import deepFreeze from 'deep-freeze-strict'
 import setImmediate from 'set-immediate-shim'
 
 import DelegatedHaxballRoom from './delegated-haxball-room'
-import { isPlayerObject, parseAccessStrings } from './utils'
+import { isPlayerObject, parseAccessStrings, asyncify } from './utils'
 
 
 export default class Haxilium extends DelegatedHaxballRoom {
@@ -94,57 +94,26 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     /**
      * Add method to the room object.
-     * @param  {String}   actionName   Name of the method.
-     * @param  {String}   callbackName Name of the callback to trigger when method is called.
-     * @param  {Boolean}  isAsync      Determines is mehod async or not. Optional, default is true.
-     * @param  {Function} execute      The method itself.
+     * @param  {String}   methodName Name of the method.
+     * @param  {Function} method     The method itself.
      */
-    method(...args) {
-        let actionName, callbackName, isAsync, execute
-        switch (args.length) {
-            case 2:
-                ;[actionName, execute] = args
-                callbackName = ''
-                isAsync = true
-                break
-            case 3:
-                ;[actionName, , execute] = args
-                callbackName = _.isString(args[1]) ? args[1] : ''
-                isAsync     = _.isBoolean(args[1]) ? args[1] : true
-                break
-            case 4:
-                ;[actionName, callbackName, isAsync, execute] = args
-                break
-            default:
-                throw new Error("Invalid number of arguments passed to 'method' function")
-        }
+    method(methodName, method) {
+        assert(_.isString(methodName), 'Method name must be a string')
+        assert(_.isFunction(method),   'Method function must be a function')
 
-        assert(_.isString(actionName),   'Action name must be a string')
-        assert(_.isString(callbackName), 'Callback name must be a string')
-        assert(_.isBoolean(isAsync),     "Parameter 'isAsync' must be boolean")
-        assert(_.isFunction(execute),    "Method 'execute' function must be a function")
+        // Bind method to 'this'.
+        method = method.bind(this)
 
-        if (callbackName) callbackName = _.camelCase(callbackName)
-        // Bind function to 'this'.
-        execute = execute.bind(this)
-
-        const actionFn = (...args) => {
+        // Wrap method with 'try-catch' and attach it to the room.
+        this[methodName] = (...args) => {
             try {
-                // Get callback arguments.
-                const callbackArgs = execute(...args)
-                // If there is no callback name provided or args is false, don't execute the callback.
-                if (callbackName && callbackArgs !== false)
-                    this._executeCallbacks(callbackName, callbackArgs)
+                method(...args)
             } catch (err) {
                 // Catch error and send message to room chat.
                 console.error(err)
                 this.sendChat('WARNING! There is an error in the code!')
             }
         }
-        // Make a room method async or sync.
-        this[actionName] = isAsync
-            ? (...args) => void setImmediate(() => actionFn(...args))
-            : actionFn
     }
 
     /**
@@ -274,66 +243,72 @@ export default class Haxilium extends DelegatedHaxballRoom {
      */
     _initPlayers(config) {
         // Get fields and their names.
-        const fields = config.player.fields
+        let fields = config.player.fields
+
+        // Expand shourcut options.
+        fields = _.mapValues(fields, optionsOrValue =>
+            _.isObject(optionsOrValue) ? optionsOrValue : { default: optionsOrValue })
+
         // Iterate over each setter and extend room object with it.
-        _.toPairs(fields).forEach(([fieldName, defaultValue]) => {
-            // Make default setter to use it if no custom setter is provided.
-            let setter = (player, value) => {
-                // Return false to prevent executing callbacks.
-                if (_.isEqual(player[fieldName], value)) return false
-                player[fieldName] = value
-            }
-
-            // Set default values for setter.
-            let isAsync = true, methodName = fieldName
-
-            // If 'defaultValue' of field is object of options then use them.
-            if (_.isObject(defaultValue)) {
-                const opts = defaultValue
-                methodName = opts.methodName || methodName
-                setter     = opts.set        || setter
-                isAsync    = _.isBoolean(opts.async) ? opts.async : isAsync
-                // Make the default value of property.
-                defaultValue = opts.default
-            }
-
-            // Build action name and callback name using kebab-case style.
-            const fullMethodName = _.camelCase(`set-player-${methodName}`)
-            const callbackName   = `player-${methodName}-change`
-            // Bind setter to 'this'.
-            setter = setter.bind(this)
-
-            // Extend the room using setter and its props.
-            this.method(fullMethodName, callbackName, isAsync, function (id, ...values) {
-                let player = this.getPlayer(id)
-                // Return false to prevent executing callbacks.
-                if (!player) return false
-
-                const callbackArgs = setter(player, ...values)
-                // Save player's fields.
-                this._players[id] = player
-
-                // Return false to prevent executing callbacks.
-                if (callbackArgs === false) return false
-                // Callback args to pass to callbacks.
-                return callbackArgs || [player]
-            })
-        })
+        _.toPairs(fields).forEach(([propName, options]) =>
+            this._initPlayerProperty(propName, options))
 
         // Make default player instance.
         // If 'defaultValue' is object of options then use them.
-        const defaultPlayer = _.mapValues(fields, defaultValue =>
-                _.isObject(defaultValue) ? defaultValue.default : defaultValue)
+        const defaultPlayer = _.mapValues(fields, options => options.default)
         // Build player factory to extend default player object.
         this._playerFactory = () => _.cloneDeep(defaultPlayer)
 
-        // Get function which calculates player's rights or make default one.
+        // Get function which calculates player's rights. Or make default one.
         this._getPlayerRights = config.player.rights || (p => [0])
-        // Get function which filters when players getting them using 'getPlayerList' or make default one.
+        // Get function which filters players when getting them using 'getPlayerList'. Or make default one.
         this._playerFilter    = config.player.filter || _.stubTrue
 
         assert(_.isFunction(this._getPlayerRights), "'player.rights' must be a function")
         assert(_.isFunction(this._playerFilter),    "'player.filter' must be a function")
+    }
+
+    /**
+     * Attach method to the room which sets 'propName' on player and calls callbacks.
+     * @param  {String}   propName           Name of player model property.
+     * @param  {Object}   options            Property options.
+     * @param  {}         options.default    Default value of property.
+     * @param  {Function} options.set        Optional. Property setter. First argument is player object, the rest arguments are values to set. If returns 'false' callbacks will not be called.
+     * @param  {String}   options.methodName Optional. Defines a name of method which will be attached to the room.
+     * @param  {String}   options.eventName  Optional. Defines a name of event which will be fired.
+     * @param  {Boolean}  options.async      Optional. Default is 'true'. If it is 'true', method will be executed asynchronously.
+     */
+    _initPlayerProperty(propName, options) {
+        // Extend 'options' with 'default options'.
+        _.defaultsDeep(options, {
+            set(player, value) {
+                if (_.isEqual(player[propName], value))
+                    return false
+                player[propName] = value
+            },
+            methodName: _.camelCase(`set-player-${propName}`),
+            eventName: _.camelCase(`player-${propName}-change`),
+            async: true
+        })
+        options.set = options.set.bind(this)
+
+        // Define setter which will be attached to the room.
+        let method = (id, ...values) => {
+            let player = this.getPlayer(id)
+            if (!player) return
+
+            // Set and save player's properties.
+            const setterReturn = options.set(player, ...values)
+            this._players[id] = player
+            if (setterReturn !== false) {
+                // Send player copy to the callbacks.
+                player = _.cloneDeep(player)
+                this._executeCallbacks(options.eventName, [player, ...values])
+            }
+        }
+
+        method = options.async ? asyncify(method) : method
+        this.method(options.methodName, method)
     }
 
     /**
@@ -351,13 +326,13 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     /**
      * Execute callbacks which are binded to specific event.
-     * @param  {String} callbackName  Name of the event which is fired.
+     * @param  {String} eventName  Name of the event which is fired.
      * @param  {Array}  callbackArgs  Array of arguments which are passed to the callbacks.
      * @return {(Boolean|Undefined)}  Returns 'false' if some callback returns 'false', otherwise 'undefined'
      */
-    _executeCallbacks(callbackName, callbackArgs = []) {
-        callbackName = _.camelCase(callbackName)
-        const callbacks = this._callbacks[callbackName]
+    _executeCallbacks(eventName, callbackArgs = []) {
+        eventName = _.camelCase(eventName)
+        const callbacks = this._callbacks[eventName]
         if (!callbacks) return
 
         // Freeze args to prevent changes in them.
@@ -365,7 +340,6 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
         // Store all results of calls of callbacks.
         const cbReturns = []
-        // Use 'for loop' instead of 'forEach method' to improve perfomance.
         for (let i = 0; i < callbacks.length; i++) {
             try {
                 // Execute callback and push result to all results.
