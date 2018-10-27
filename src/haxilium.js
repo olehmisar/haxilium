@@ -237,27 +237,24 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param {Object} config Room config.
      */
     _initPlayers(config) {
-        // Get fields and their names.
-        let fields = config.player.fields
+        config.player = config.player || {}
 
         // Expand shourcut options.
-        fields = _.mapValues(fields, optionsOrValue =>
+        config.player = _.mapValues(config.player, optionsOrValue =>
             _.isObject(optionsOrValue) ? optionsOrValue : { default: optionsOrValue })
 
         // Iterate over each setter and extend room object with it.
-        _.toPairs(fields).forEach(([propName, options]) =>
+        _.toPairs(config.player).forEach(([propName, options]) =>
             this._initPlayerProperty(propName, options))
 
-        // Make default player instance.
-        // If 'defaultValue' is object of options then use them.
-        const defaultPlayer = _.mapValues(fields, options => options.default)
         // Build player factory to extend default player object.
+        const defaultPlayer = _.mapValues(config.player, options => options.default)
         this._playerFactory = () => _.cloneDeep(defaultPlayer)
 
         // Get function which calculates player's rights. Or make default one.
-        this._getPlayerRights = config.player.rights || (p => [0])
+        this._getPlayerRights = config.playerRights || (p => [0])
         // Get function which filters players when getting them using 'getPlayerList'. Or make default one.
-        this._playerFilter    = config.player.filter || _.stubTrue
+        this._playerFilter    = config.playerFilter || _.stubTrue
 
         assert(_.isFunction(this._getPlayerRights), "'player.rights' must be a function")
         assert(_.isFunction(this._playerFilter),    "'player.filter' must be a function")
