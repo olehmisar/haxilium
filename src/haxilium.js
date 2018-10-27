@@ -5,14 +5,18 @@ import setImmediate from 'set-immediate-shim'
 
 import DelegatedHaxballRoom from './delegated-haxball-room'
 import { isPlayerObject, parseAccessStrings, asyncify } from './utils'
+import * as errors from './errors'
 
 
 export default class Haxilium extends DelegatedHaxballRoom {
+    CommandNotFoundError       = errors.CommandNotFoundError
+    AccessToCommandDeniedError = errors.AccessToCommandDeniedError
+
     SPECT = 0
     RED = 1
     BLUE = 2
     _players = {}
-    _commands = []
+    _commands = {}
 
     constructor(config) {
         assert(_.isObject(config), 'Please provide room config')
@@ -104,17 +108,16 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     /**
      * Add command to room object. Later it can be called using 'executeCommand'.
-     * @param {String[]} options.names        Array of names of the command.
-     * @param {String}   options.description  User friendly description of the command.
-     * @param {String[]} options.access       Array of conditions. Condition can be '>lvl', '<lvl', '>=lvl', '<=lvl', '=lvl' or 'lvl'(translates to '>=lvl'), where 'lvl' is unsigned number which determines what level of rights does player need to execute this command. If just 'lvl' is given, it is transformed to '>=lvl'.
-     * @param {Function} options.execute      Command execute function. Params: 'player', 'args'.
+     * @param {String[]} options.names   Array of names of the command.
+     * @param {String}   options.help    User friendly help of the command.
+     * @param {String[]} options.access  Array of conditions. Condition can be '>lvl', '<lvl', '>=lvl', '<=lvl', '=lvl' or 'lvl'(translates to '>=lvl'), where 'lvl' is unsigned number which determines what level of rights does player need to execute this command. If just 'lvl' is given, it is transformed to '>=lvl'.
+     * @param {Function} options.execute Command execute function. Params: 'player', 'args'.
      */
-    addCommand({ names, description, examples, access: accessStrings, execute }) {
+    addCommand({ names, help, access: accessStrings, execute }) {
         // Validate arguments.
         assert(_.isArray(accessStrings), "Command 'access' must be array of values")
         assert(_.isFunction(execute),    "Command 'execute' function must be a function")
         assert(names.length > 0,         'Command must have at least one name')
-        assert(!names.some(_.isEmpty),   'Invalid name of command')
 
         // Normalize arguments.
         names = names.map(name => name.trim().toLowerCase())
@@ -122,24 +125,30 @@ export default class Haxilium extends DelegatedHaxballRoom {
         const accessFn = parseAccessStrings(accessStrings)
 
         // Add command.
-        this._commands.push({ names, description, examples, access: accessStrings, accessFn, execute })
+        const command = { names, help, access: accessStrings, accessFn, execute }
+        names.forEach(name => {
+            this._commands[name] = command
+        })
     }
 
     /**
      * Get info of each command.
-     * @param  {String} commandName  Name of the desired command. All other commands will be filtered out.
-     * @return {Array}               Array of commands' info.
+     * @param  {String} commandName Name of the command.
+     * @return {Array}              Array of commands' info.
      */
     getCommandsInfo(commandName) {
-        let commands = this._commands
-        if (commandName)
-            commands = commands.filter(({ names }) => names.includes(commandName))
+        // let commands = this._commands
+        // if (commandName)
+        //     commands = commands.filter(({ names }) => names.includes(commandName))
 
-        return commands.map(command => ({
-            names: _.clone(command.names),
-            description: _.clone(command.description),
-            examples: _.clone(command.examples),
-        }))
+        // return commands.map(command => ({
+        //     names: _.clone(command.names),
+        //     description: _.clone(command.description),
+        //     examples: _.clone(command.examples),
+        // }))
+        // TODO: Rewrite this method.
+
+        return []
     }
 
     /**
@@ -148,27 +157,27 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param  {String}       rawCommand  A raw command string to parse and execute.
      */
     executeCommand(player, rawCommand = '') {
-        rawCommand = rawCommand.trim()
-        if (!rawCommand) return
-        // Get command arguments.
-        const args = rawCommand.split(/\s+/)
+        const args = rawCommand.trim().split(/\s+/)
+
         // First argument(always lowercase) is name of command.
-        const name = args[0] = args[0].toLowerCase()
-        // Find command object
-        const commandObject = this._commands.find(({ names }) => names.includes(name))
-        if (!commandObject) return
+        const name = args[0] = _.toLower(args[0])
+        const command = this._commands[name]
 
-        // Obtain execute access functions and command function itself.
-        const { accessFn, execute } = commandObject
+        if (!command) {
+            throw new this.CommandNotFoundError(`Unknown command "${name}"`)
+        }
 
-        // Get player's rights.
-        const playerRights = this._getPlayerRights(player)
         // Determine if SOME player's rights match EVERY access function.
-        const canExecute = playerRights.some(rights => accessFn(rights))
+        const playerRights = this._getPlayerRights(player)
+        const canExecute = playerRights.some(rights =>
+            command.accessFn(rights))
 
-        // Execute command if allowed.
-        if (!canExecute) return
-        return execute(player, args)
+        if (!canExecute) {
+            throw new this.AccessToCommandDeniedError(
+                `${player.name} doesn't have enough rights to execute "${name}"`)
+        }
+
+        return command.execute(player, args)
     }
 
     /**
