@@ -106,7 +106,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
         // Wrap method with 'try-catch' and attach it to the room.
         this[methodName] = (...args) => {
             try {
-                method(...args)
+                return method(...args)
             } catch (err) {
                 // Catch error and send message to room chat.
                 console.error(err)
