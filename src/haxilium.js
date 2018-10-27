@@ -99,20 +99,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
     method(methodName, method) {
         assert(_.isString(methodName), 'Method name must be a string')
         assert(_.isFunction(method),   'Method function must be a function')
-
-        // Bind method to 'this'.
-        method = method.bind(this)
-
-        // Wrap method with 'try-catch' and attach it to the room.
-        this[methodName] = (...args) => {
-            try {
-                return method(...args)
-            } catch (err) {
-                // Catch error and send message to room chat.
-                console.error(err)
-                this.sendChat('WARNING! There is an error in the code!')
-            }
-        }
+        this[methodName] = method
     }
 
     /**
