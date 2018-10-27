@@ -122,11 +122,6 @@ export default class Haxilium extends DelegatedHaxballRoom {
         assert(names.length > 0,         'Command must have at least one name')
         assert(names.every(_.isString),  "Command 'names' must be array of strings")
 
-        if (help) {
-            assert(_.isObject(help),         "Command 'help' must be an object")
-            assert(_.isString(help.default), "Command 'help.default' must be a string")
-        }
-
         assert(_.isArray(categories),    "Command 'categories' must be array of strings")
         assert(categories.every(_.isString),
             "Command 'categories' must be array of strings")
@@ -148,7 +143,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
         // Create and freeze command to prevent changes in it.
         const command = {
-            names, help: help || {}, categories,
+            names, help, categories,
             access: accessStrings, accessFn,
             execute
         }
