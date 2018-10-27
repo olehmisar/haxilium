@@ -17,6 +17,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
     BLUE = 2
     _players = {}
     _commands = {}
+    _commandCategories = new Set()
 
     constructor(config) {
         assert(_.isObject(config), 'Please provide room config')
@@ -108,47 +109,78 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     /**
      * Add command to room object. Later it can be called using 'executeCommand'.
-     * @param {String[]} options.names   Array of names of the command.
-     * @param {String}   options.help    User friendly help of the command.
-     * @param {String[]} options.access  Array of conditions. Condition can be '>lvl', '<lvl', '>=lvl', '<=lvl', '=lvl' or 'lvl'(translates to '>=lvl'), where 'lvl' is unsigned number which determines what level of rights does player need to execute this command. If just 'lvl' is given, it is transformed to '>=lvl'.
-     * @param {Function} options.execute Command execute function. Params: 'player', 'args'.
+     * @param {String[]} command.names        Array of names of the command.
+     * @param {String}   command.help         Help object of command.
+     * @param {String}   command.help.default User friendly help of the command.
+     * @param {String[]} command.categories   Array of categories to which this command belogns.
+     * @param {String[]} command.access       Array of conditions. Condition can be '>lvl', '<lvl', '>=lvl', '<=lvl', '=lvl' or 'lvl'(translates to '>=lvl'), where 'lvl' is unsigned number which determines what level of rights does player need to execute this command. If just 'lvl' is given, it is transformed to '>=lvl'.
+     * @param {Function} command.execute      Command execute function. Params: 'player', 'args'.
      */
-    addCommand({ names, help, access: accessStrings, execute }) {
+    addCommand({ names, help, categories = [], access: accessStrings, execute }) {
         // Validate arguments.
-        assert(_.isArray(accessStrings), "Command 'access' must be array of values")
-        assert(_.isFunction(execute),    "Command 'execute' function must be a function")
+        assert(_.isArray(names),         "Command 'names' must be array of strings")
         assert(names.length > 0,         'Command must have at least one name')
+        assert(names.every(_.isString),  "Command 'names' must be array of strings")
+
+        assert(_.isArray(categories),    "Command 'categories' must be array of strings")
+        assert(categories.every(_.isString),
+            "Command 'categories' must be array of strings")
+
+        assert(_.isArray(accessStrings), "Command 'access' must be array of strings")
+        assert(accessStrings.length > 0, 'Command must have at least one access string')
+        assert(accessStrings.every(_.isString),
+            "Command 'access' must be array of strings")
+
+        assert(_.isFunction(execute),    "Command 'execute' function must be a function")
+
+        // Save categories to use later.
+        this._commandCategories = new Set([...this._commandCategories, ...categories])
 
         // Normalize arguments.
         names = names.map(name => name.trim().toLowerCase())
         execute = execute.bind(this)
         const accessFn = parseAccessStrings(accessStrings)
 
-        // Add command.
-        const command = { names, help, access: accessStrings, accessFn, execute }
+        // Create and freeze command to prevent changes in it.
+        const command = {
+            names, help, categories,
+            access: accessStrings, accessFn,
+            execute
+        }
+        deepFreeze(command)
         names.forEach(name => {
             this._commands[name] = command
         })
     }
 
     /**
-     * Get info of each command.
+     * Get command object.
      * @param  {String} commandName Name of the command.
-     * @return {Array}              Array of commands' info.
+     * @return {Object}             Command object.
      */
-    getCommandsInfo(commandName) {
-        // let commands = this._commands
-        // if (commandName)
-        //     commands = commands.filter(({ names }) => names.includes(commandName))
+    getCommand(commandName) {
+        return this._commands[commandName]
+    }
 
-        // return commands.map(command => ({
-        //     names: _.clone(command.names),
-        //     description: _.clone(command.description),
-        //     examples: _.clone(command.examples),
-        // }))
-        // TODO: Rewrite this method.
+    /**
+     * Get all commands in a specific category.
+     * @param  {String}   category Name of the category.
+     * @return {Object[]}          Array of commands in a specific category.
+     */
+    getCommandsByCategory(category) {
+        // 'this._commands' is a lookup table of commands. Can contain duplicates.
+        return _(this._commands)
+            .filter(command => command.categories.includes(category))
+            .uniq()
+            .value()
+    }
 
-        return []
+    /**
+     * Get all existing command categories.
+     * @return {String[]} Command categories.
+     */
+    getCommandCategories() {
+        return Array.from(this._commandCategories)
     }
 
     /**
