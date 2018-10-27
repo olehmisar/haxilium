@@ -68,26 +68,25 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     /**
      * Bind callbacks to the room.
-     * @param  {String}     callbackName Event name. Can be PascalCase, camelCase or kebab-case.
+     * @param  {String}     eventName    Event name. Can be PascalCase, camelCase or kebab-case.
      * @param  {Function[]} callbacks    Array of functions which will be executed when event fires. Can be array of arrays of functions.
      * @return {Function}                Unbind callbacks function. Uses to unbind just binded callbacks. No parameters.
      */
-    on(cbName, ...callbacks) {
-        callbacks = _.flatten(callbacks)
-        cbName = _.camelCase(cbName)
+    on(eventName, ...callbacks) {
+        callbacks = _.flatten(callbacks).map(cb => cb.bind(this))
+        eventName = _.camelCase(eventName)
 
-        assert(_.isString(cbName), 'Callback name must be a string')
-        assert(callbacks.length > 0, 'No callbacks provided for binding')
+        assert(_.isString(eventName), 'Callback name must be a string')
+        assert(callbacks.length > 0, `No callbacks provided for ${eventName} event`)
         assert(callbacks.every(_.isFunction), 'Event callbacks must be functions')
 
-        if (!this._callbacks[cbName]) this._callbacks[cbName] = []
-        // Bind callbacks to 'this'.
-        callbacks = callbacks.map(cb => cb.bind(this))
         // Bind callbacks to events.
-        this._callbacks[cbName].push(...callbacks)
+        this._callbacks[eventName] = this._callbacks[eventName] || []
+        this._callbacks[eventName].push(...callbacks)
+
         // Return unbinding function.
         return () => {
-            this._callbacks[cbName] = this._callbacks[cbName]
+            this._callbacks[eventName] = this._callbacks[eventName]
                 .filter(cb => !callbacks.includes(cb))
         }
     }
