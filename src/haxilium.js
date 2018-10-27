@@ -361,15 +361,15 @@ export default class Haxilium extends DelegatedHaxballRoom {
     }
 
     /**
-     * Extend player instance with additional fields.
+     * Extend player instance with additional properties.
      * @param  {PlayerObject} rawPlayer Raw player object which will be extended.
      * @return {PlayerObject}           Extended player object.
      */
     _wrapPlayer(rawPlayer) {
-        // If player's additional fields don't exist yet, create them.
+        // If player's additional properties don't exist yet, create them.
         if (!this._players[rawPlayer.id])
             this._players[rawPlayer.id] = this._playerFactory()
-        // Merge player and additional player's fields.
+        // Merge player and additional properties.
         return { ...this._players[rawPlayer.id], ...rawPlayer }
     }
 }
