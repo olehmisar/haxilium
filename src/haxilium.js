@@ -120,7 +120,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param {String[]} command.access       Array of conditions. Condition can be '>lvl', '<lvl', '>=lvl', '<=lvl', '=lvl' or 'lvl'(translates to '>=lvl'), where 'lvl' is unsigned number which determines what level of rights does player need to execute this command. If just 'lvl' is given, it is transformed to '>=lvl'.
      * @param {Function} command.execute      Command execute function. Params: 'player', 'args'.
      */
-    addCommand({ names, help, categories = [], access: accessStrings, execute }) {
+    addCommand({ names, help, categories = [], access: accessStrings = ['>=0'], execute }) {
         // Validate arguments.
         assert(_.isArray(names),         "Command 'names' must be array of strings")
         assert(names.length > 0,         'Command must have at least one name')
