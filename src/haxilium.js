@@ -29,7 +29,11 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     /**
      * Bind module to the room.
-     * @param {Object} module Module object. Include 'defaultState', 'methods', 'callbacks' and 'commands' fields.
+     * @param {Object}   module              Module object.
+     * @param {Object}   module.defaultState An object where you put all module related variables. This object will be recursively merged with 'defaultState's of other modules and will be set as 'state' property of the room.
+     * @param {Object}   module.methods      An object of methods which will be attached to the room. Keys of object are names of methods and values of object are methods themselves.
+     * @param {Object}   module.callbacks    An object of callbacks which will be registered. Keys of object are names of events and values are callback functions or arrays of callback functions.
+     * @param {Object[]} module.commands     An array of commands to register.
      */
     bindModule(module) {
         const { defaultState, methods, callbacks, commands } = module
