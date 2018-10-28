@@ -330,7 +330,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
             if (setterReturn !== false) {
                 // Send player copy to the callbacks.
                 player = _.cloneDeep(player)
-                this._executeCallbacks(options.eventName, [player, ...values])
+                this._executeCallbacks(options.eventName, [player])
             }
         }
 
