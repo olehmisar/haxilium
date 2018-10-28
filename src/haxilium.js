@@ -114,8 +114,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
     /**
      * Add command to room object. Later it can be called using 'executeCommand'.
      * @param {String[]} command.names        Array of names of the command.
-     * @param {String}   command.help         Help object of command.
-     * @param {String}   command.help.default User friendly help of the command.
+     * @param {String}   command.help         User friendly help of the command.
      * @param {String[]} command.categories   Array of categories to which this command belogns.
      * @param {String[]} command.access       Array of conditions. Condition can be '>lvl', '<lvl', '>=lvl', '<=lvl', '=lvl' or 'lvl'(translates to '>=lvl'), where 'lvl' is unsigned number which determines what level of rights does player need to execute this command. If just 'lvl' is given, it is transformed to '>=lvl'.
      * @param {Function} command.execute      Command execute function. Params: 'player', 'args'.
