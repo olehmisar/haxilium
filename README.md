@@ -143,7 +143,7 @@ room.on('playerAfkChange', function (player) {
 
 
 ### Create methods
-Besides default methods and methods which are automatically created for us by Haxilium(e.g., `setPlayerAfk()` from [above section](#player-object-extension)). Sometimes it is useful to define other room related functions that we will use across entire project. It is logically correct to attach them to the room object. Use `method(name: string, methodFn: function)` to attach function to the room. In the following code we create function which adds "INFO: " prefix to the message that we want to send to player:
+Besides default methods and methods which are automatically created for us by Haxilium(e.g., `setPlayerAfk()` from [above section](#player-object-extension)), we can create our own methods. We use `method(name: string, methodFn: function)` to attach `methodFn` function to the room under the `name` name. In the following code we create function which adds "INFO: " prefix to the message that we want to send to player:
 ```js
 room.method('sendChatInfo', function (message, playerID) {
     // 'this' refers to the 'room' object. Don't use 'room' inside of callbacks, methods etc.
