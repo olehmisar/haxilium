@@ -19,10 +19,10 @@ That's all!
 
 
 ## Getting started
-Haxilium is very similar to the [Haxball Headless API] because it is thin wrapper over it. That's why it is simple to get started.
+Haxilium is very similar to the original [Haxball Headless API] because it is a thin wrapper over it. That's why it is simple to get started.
 
 ### Create a room
-Use `haxilium(config)` to create a room:
+Use `haxilium(config: RoomConfig)` to create a room:
 ```js
 import haxilium from 'haxilium'
 
@@ -36,82 +36,30 @@ const room = haxilium({
 ```
 The above code will create a __public__ haxball room with "__Haxilium Room__" name , "__Haxilium Bot__" player(bot) name, maximum amount of players of __10__ and with geolocation of __England__.
 
-### Player object extension
-<!-- TODO: describe player extension better. -->
-
-We can extend player object if we pass `player` field to the config:
-```js
-import haxilium from 'haxilium'
-
-const room = haxilium({
-    roomName: 'Haxilium Room',
-    playerName: 'Haxilium Bot',
-    maxPlayers: 10,
-    public: true,
-    geo: { code: 'en', lat: 52, lon: 0 },
-
-    // Define additional fields for player object.
-    player: {
-        // 'false' is the default value for 'afk'.
-        afk: false
-    }
-})
-```
-
-In the above code we:
-1. add `afk` property to the player object
-2. attach `setPlayerAfk(playerID, value)` to the room object
-3. create `playerAfkChange` event
-
-So, we can make something like the following. We will catch player message and if it is "afk" then we will toggle his afk status. Don't use this code in your real project because there is a better solution using [commands](#add-commands).
-```js
-room.on('playerChat', function (player, message) {
-    if (message === 'afk') {
-        if (player.afk) {
-            this.setPlayerAfk(player.id, false)
-        } else
-            this.setPlayerAfk(player.id, true)
-        }
-    }
-})
-
-room.on('playerAfkChange', function (player) {
-    if (player.afk) this.sendChat(player.name + ' is afk')
-    else            this.sendChat(player.name + ' is not afk')
-})
-```
 
 ### Attach callbacks
-A `ready` event will be fired when room is ready to use. To attach callback to that event use `on(event, callbackFn)` method:
+[Full list of events][Haxball Headless API events.]
+
+To attach callback to the event we use `on(event: string, callbackFn: function)`. For example, a `playerJoin` event will be fired when player joins the room. We register a callback that notifies us when player joins the room:
 ```js
-room.on('ready', function () {
-    console.log('Room is ready!')
+room.on('playerJoin', function (player) {
+    console.log(player.name + ' has joined')
 })
 ```
 
 __NOTE__ that event name is __not__ case-sensitive and is __not__ sensitive to different styles of cases. In other words, `player-join`, `PlayerJoin` and `playerJoin` is the same event. I recommend to use `camelCase` for event names and I will use it in the next sections.
 
-
-Ok, let's add more callbacks. First one will greet user when he joins the room, second one will give him admin rights based on some condition:
+Ok, let's add one more callback which will greet player when he joins the room:
 ```js
 room.on('playerJoin', function (player) {
-    // 'this' refers to the 'room' object. Don't use 'room' inside of callbacks, methods etc.
+    // 'this' refers to the 'room' object. Don't use 'room' inside of callbacks.
     this.sendChat('Welcome, ' + player.name)
-})
-
-room.on('playerJoin', function (player) {
-    if (player.name === 'olegmisar') {
-        this.setPlayerAdmin(player.id, true)
-    }
 })
 ```
 
-__NOTE__ that registration __order__ of callbacks __matters__.
+In result, we have two registered callbacks. First one will `console.log()` that player has joined the room. Second callback will greet player.
 
-If name of player that enters the room is "olegmisar" room will do the following:
-1. send "Hello, olegmisar" message
-2. give him admin rights
-
+__NOTE__ that registration __order__ of callbacks __matters__. This means that __first callback__ will be called __earlier__ than __second one__.
 
 Also we can pass an array of callbacks to register them in one go:
 ```js
@@ -129,34 +77,87 @@ room.on('playerJoin', callbacks)
 
 When we don't want to use a callback anymore we can detach it:
 ```js
+// 'room.on()' returns 'detach()' function which detaches just attached callback.
 const detach = room.on('playerJoin', function (player) {
     console.log(player.name + ' has joined')
 })
 
 ...
 
-// Later in the code:
+// Later in the code we detach callback and will not get 'player has joined' notifications anymore.
 detach()
 ```
 
 To see full list of events visit [this page][Haxball Headless API events].
 
 
-### Create methods
-Sometimes it is useful to define room related functions that we will use across entire project. It is logically correct to attach them to the room object. Use `method(name, methodFn)` to attach function to the room:
+### Player object extension
+<!-- TODO: describe player extension better. -->
+
+We can extend player object if we pass `player` field to the `RoomConfig`. In the following code we:
+1. add `afk` property to the player object
+2. create `setPlayerAfk(playerID, value)` to the room object
+3. create `playerAfkChange(player: PlayerObject)` event
+
 ```js
-room.method('sendChatPrefixed', function (prefix, message, playerID) {
-    // 'this' refers to the 'room' object. Don't use 'room' inside of callbacks, methods etc.
-    this.sendChat(prefix + ' ' + message, playerID)
+import haxilium from 'haxilium'
+
+const room = haxilium({
+    roomName: 'Haxilium Room',
+    playerName: 'Haxilium Bot',
+    maxPlayers: 10,
+    public: true,
+    geo: { code: 'en', lat: 52, lon: 0 },
+
+    // Define additional fields for player object.
+    player: {
+        // 'false' is the default value for 'afk'.
+        // 'setPlayerAfk(playerID: int, afk: bool)' is created automatically.
+        // 'playerAfkChange(player: PlayerObject)' is also created automatically.
+        afk: false
+    }
 })
 ```
 
-Then we can use `sendChatPrefixed()`:
+Now we can use `setPlayerAfk(playerID: int, afk: bool)` and `playerAfkChange(player: PlayerObject)` in our code. We will catch player's message and if it is "afk" then we will toggle player's afk status. After afk status is changed, all `playerAfkChange(player: PlayerObject)` callbacks will be called. We register one callback which will notify other players about someone is afk.
+
+_Don't use this code in your real project because there is a better solution using [commands](#add-commands).__
+```js
+room.on('playerChat', function (player, message) {
+    if (message === 'afk') {
+        // Use `setPlayerAfk()` method.
+        if (player.afk) {
+            this.setPlayerAfk(player.id, false)
+        } else
+            this.setPlayerAfk(player.id, true)
+        }
+    }
+})
+
+// Register callback for 'playerAfkChange()' event.
+room.on('playerAfkChange', function (player) {
+    if (player.afk) this.sendChat(player.name + ' is afk')
+    else            this.sendChat(player.name + ' is not afk')
+})
+```
+
+
+### Create methods
+Besides default methods and methods which are automatically created for us by Haxilium(e.g., `setPlayerAfk()` from [above section](#player-object-extension)). Sometimes it is useful to define other room related functions that we will use across entire project. It is logically correct to attach them to the room object. Use `method(name: string, methodFn: function)` to attach function to the room. In the following code we create function which adds "INFO: " prefix to the message that we want to send to player:
+```js
+room.method('sendChatInfo', function (message, playerID) {
+    // 'this' refers to the 'room' object. Don't use 'room' inside of callbacks, methods etc.
+    // Send prefixed message.
+    this.sendChat('INFO: ' + message, playerID)
+})
+```
+
+Then we can use `sendChatInfo(message: string, playerID: int)`. If player types "get info" in a chat we will send some info message to him:
 ```js
 room.on('playerChat', function (player, message) {
     if (message === 'get info') {
         // Sends "INFO: This is info message" to this player
-        this.sendChatPrefixed('INFO:', 'This is info message', player.id)
+        this.sendChatInfo('This is info message', player.id)
     }
 })
 ```
@@ -165,7 +166,7 @@ room.on('playerChat', function (player, message) {
 ### Add commands
 <!-- TODO: describe command making better. -->
 
-Creating commands is very simple with Haxilium. Just use `addCommand(command)`. We will make command that adds two numbers provided by user. For example: `add 2 5` will send "2 + 5 = 7" to user. Now look at the code:
+Creating commands is very simple with Haxilium. Just use `addCommand(command: CommandObject)`. We will make command that adds two numbers provided by player. For example: `add 2 5` will send "2 + 5 = 7" to player. Now let's look at code:
 ```js
 room.addCommand({
     names: ['add'],
@@ -181,7 +182,7 @@ room.addCommand({
 })
 ```
 
-Then we want users to execute this command. We use `executeCommand(player, command)` to do this:
+Then we want players to execute this command. We use `executeCommand(player, command)` to do this:
 ```js
 room.on('playerChat', function (player, message) {
     if (message[0] === '!') {
