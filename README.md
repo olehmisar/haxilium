@@ -81,8 +81,8 @@ room.on('playerAfkChange', function (player) {
 })
 ```
 
-### Bind callbacks
-A `ready` event will be fired when room is ready to use. To bind callback to that event use `on(event, callbackFn)` method:
+### Attach callbacks
+A `ready` event will be fired when room is ready to use. To attach callback to that event use `on(event, callbackFn)` method:
 ```js
 room.on('ready', function () {
     console.log('Room is ready!')
@@ -127,16 +127,16 @@ const callbacks = [cb0, cb1]
 room.on('playerJoin', callbacks)
 ```
 
-When we don't want to use a callback anymore we can unbind it:
+When we don't want to use a callback anymore we can detach it:
 ```js
-const unbind = room.on('playerJoin', function (player) {
+const detach = room.on('playerJoin', function (player) {
     console.log(player.name + ' has joined')
 })
 
 ...
 
 // Later in the code:
-unbind()
+detach()
 ```
 
 To see full list of events visit [this page][Haxball Headless API events].
