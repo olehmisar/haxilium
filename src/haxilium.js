@@ -76,24 +76,23 @@ export default class Haxilium extends DelegatedHaxballRoom {
     }
 
     /**
-     * Bind callbacks to the room.
-     * @param  {String}     eventName    Event name. Can be PascalCase, camelCase or kebab-case.
-     * @param  {Function[]} callbacks    Array of functions which will be executed when event fires. Can be array of arrays of functions.
-     * @return {Function}                Unbind callbacks function. Uses to unbind just binded callbacks. No parameters.
+     * Attach callbacks to the event.
+     * @param  {String}                eventName Event name. Can be PascalCase, camelCase or kebab-case.
+     * @param  {(Function|Function[])} callbacks Function or array of functions which will be called when event fires.
+     * @return {Function}                        Unbind callbacks function. Uses to unbind just binded callbacks. No parameters.
      */
-    on(eventName, ...callbacks) {
-        callbacks = _.flatten(callbacks).map(cb => cb.bind(this))
+    on(eventName, callbacks) {
+        callbacks = _.castArray(callbacks).map(cb => cb.bind(this))
         eventName = _.camelCase(eventName)
 
         assert(_.isString(eventName), 'Callback name must be a string')
         assert(callbacks.length > 0, `No callbacks provided for ${eventName} event`)
         assert(callbacks.every(_.isFunction), 'Event callbacks must be functions')
 
-        // Bind callbacks to events.
-        this._callbacks[eventName] = this._callbacks[eventName] || []
-        this._callbacks[eventName].push(...callbacks)
+        // Attach callbacks to the event.
+        this._callbacks[eventName] = (this._callbacks[eventName] || []).concat(callbacks)
 
-        // Return unbinding function.
+        // Return detaching function.
         return () => {
             this._callbacks[eventName] = this._callbacks[eventName]
                 .filter(cb => !callbacks.includes(cb))
@@ -259,7 +258,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
     }
 
     /**
-     * Get player by id and extend it.
+     * Get player by id.
      * @param  {Number}       id Id of the player to return.
      * @return {PlayerObject}    Extended player object.
      */
@@ -353,9 +352,9 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     /**
      * Execute callbacks which are binded to specific event.
-     * @param  {String} eventName  Name of the event which is fired.
-     * @param  {Array}  callbackArgs  Array of arguments which are passed to the callbacks.
-     * @return {(Boolean|Undefined)}  Returns 'false' if some callback returns 'false', otherwise 'undefined'
+     * @param  {String} eventName    Name of the event which is fired.
+     * @param  {Array}  callbackArgs Array of arguments which are passed to the callbacks.
+     * @return {(Boolean|Undefined)} Returns 'false' if some callback returns 'false', otherwise 'undefined'.
      */
     _executeCallbacks(eventName, callbackArgs = []) {
         eventName = _.camelCase(eventName)
