@@ -166,6 +166,7 @@ room.on('playerChat', function (player, message) {
 
 
 ### Add commands
+__WARNING! Command system isn't ready yet. Maybe there will be breaking changes!__
 <!-- TODO: describe command making better. -->
 
 Creating commands is very simple with Haxilium. Just use `addCommand(command: CommandObject)`. We will make command that adds two numbers provided by player. For example: `add 2 5` will send "2 + 5 = 7" to player. Now let's look at code:
@@ -199,6 +200,7 @@ __NOTE__ that we pass a `string` to the `executeCommand(player, command)`. For e
 
 
 ## Module system
+__WARNING! Module system isn't ready yet. Maybe there will be breaking changes!__
 <!-- TODO: add 'defaultState' and 'methods' description -->
 
 Haxilium provides module registration system. Module is an object which contains following fields: `defaultState`, `methods`, `callbacks` and `commands`. Let's look at a module which creates afk system:
