@@ -96,7 +96,7 @@ To see full list of events visit [this page][Haxball Headless API events].
 
 We can extend player object if we pass `player` field to the `RoomConfig`. In the following code we:
 1. add `afk` property to the player object
-2. create `setPlayerAfk(playerID, value)` on the room object
+2. create `setPlayerAfk(playerID: int, afk: bool)` method on the room object
 3. create `playerAfkChange(player: PlayerObject)` event
 
 ```js
