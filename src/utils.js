@@ -11,28 +11,55 @@ export function isPlayerObject(obj) {
     }
     return true
 }
+window.parseAccessStringWithRoles = parseAccessStringWithRoles
+export function parseAccessStringWithRoles(rawStr, roles) {
+    let str = rawStr.trim()
 
-export function parseAccessStrings(strings) {
-    const fns = strings.map(str => {
-        str = _.toString(str)
-        const access = str.match(/^((?:>|<)?=?)(-?\d+)$/)
-        assert(_.isArray(access), 'Invalid access condition string')
+    assert(!_.isEmpty(str), `Invalid 'access' string ${rawStr}`)
+    assert(!_.isEmpty(roles), `Invalid player's roles ${_.keys(roles)}`)
 
-        const condition = access[1] || '>='
-        const level = parseInt(access[2])
-        assert(['>', '<', '>=', '<=', '='].includes(condition), 'Invalid access condition string')
-        switch (condition) {
-            case '>':  return rights => rights >   level
-            case '<':  return rights => rights <   level
-            case '>=': return rights => rights >=  level
-            case '<=': return rights => rights <=  level
-            case '=':  return rights => rights === level
-        }
-    })
-    return rights => fns.every(fn => fn(rights))
+    const wrapWithParenthesis = val => `(${val})`
+
+    const rolesKeys = _.keys(roles)
+    const comparationOperators = ['>=', '>', '<=', '<', '==', '==='].map(_.escapeRegExp)
+    const allWordsRegExp = new RegExp(
+        ['(', ')', '||', '&&'].map(_.escapeRegExp)
+            .concat(comparationOperators)
+            .concat(rolesKeys)
+            .map(wrapWithParenthesis)
+            .join('|'),
+        'g')
+
+    // If string contains chars that are not listed in above regexp
+    // then this string contains bad characters.
+    assert(str.replace(allWordsRegExp, '').trim() === '', `Invalid 'access' string ${rawStr}. Use only allowed characters to make 'access' string`)
+
+    const comparationOperatorsRegExp = new RegExp(
+        comparationOperators.map(wrapWithParenthesis).join('|'),
+        'g')
+    str = str.replace(comparationOperatorsRegExp, '_role$&')
+
+    const rolesRegExp = new RegExp(
+        rolesKeys.map(wrapWithParenthesis).join('|'),
+        'g')
+    str = str.replace(rolesRegExp, roleName => roles[roleName])
+
+    const functionBody = 'return Boolean(' + str + ')'
+    try {
+        return new Function('_role', functionBody)
+    } catch (e) {
+        throw new Error(`Invalid 'access' string ${rawStr}. Use only allowed characters to make 'access' string`)
+    }
 }
 
 export function asyncify(fn) {
     return (...args) =>
         void setImmediate(() => fn(...args))
+}
+
+export function createEnum(keys) {
+    return keys.reduce((result, key, value) => ({
+        ...result,
+        [key]: value
+    }), {})
 }

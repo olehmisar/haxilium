@@ -4,7 +4,7 @@ import deepFreeze from 'deep-freeze-strict'
 import setImmediate from 'set-immediate-shim'
 
 import DelegatedHaxballRoom from './delegated-haxball-room'
-import { isPlayerObject, parseAccessStrings, asyncify } from './utils'
+import { isPlayerObject, parseAccessStringWithRoles, asyncify, createEnum } from './utils'
 import * as errors from './errors'
 
 
@@ -17,7 +17,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
     BLUE = 2
     _players = {}
     _commands = {}
-    _commandCategories = new Set()
+    _roles = {}
 
     constructor(config) {
         assert(_.isObject(config), 'Please provide room config')
@@ -112,43 +112,32 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     /**
      * Add command to room object. Later it can be called using 'executeCommand'.
-     * @param {String[]} command.names        Array of names of the command.
-     * @param {String}   command.help         User friendly help of the command.
-     * @param {String[]} command.categories   Array of categories to which this command belogns.
-     * @param {String[]} command.access       Array of conditions. Condition can be '>lvl', '<lvl', '>=lvl', '<=lvl', '=lvl' or 'lvl'(translates to '>=lvl'), where 'lvl' is unsigned number which determines what level of rights does player need to execute this command. If just 'lvl' is given, it is transformed to '>=lvl'.
-     * @param {Function} command.execute      Command execute function. Params: 'player', 'args'.
+     * @param {String[]} command.names   Array of names of the command.
+     * @param {String    command.access  Boolean expression which determines if player can execute this command.
+     *                                   Examples: '>=admin' will allow only players with 'admin' or higher role to execute command,
+     *                                   '>=player && <admin' will allow command execution only for players with role higher or
+     *                                   equal to 'player' and less than 'admin'.
+     * @param {Function} command.execute Command execute function. Params: 'player', 'args'.
      */
-    addCommand({ names, help, categories = [], access: accessStrings = ['>=0'], execute }) {
+    addCommand(command) {
+        let { names, access: accessString = '', execute } = command
+
         // Validate arguments.
         assert(_.isArray(names),         "Command 'names' must be array of strings")
         assert(names.length > 0,         'Command must have at least one name')
-        assert(names.every(_.isString),  "Command 'names' must be array of strings")
-
-        assert(_.isArray(categories),    "Command 'categories' must be array of strings")
-        assert(categories.every(_.isString),
-            "Command 'categories' must be array of strings")
-
-        assert(_.isArray(accessStrings), "Command 'access' must be array of strings")
-        assert(accessStrings.length > 0, 'Command must have at least one access string')
-        assert(accessStrings.every(_.isString),
-            "Command 'access' must be array of strings")
-
+        assert(names.every(_.isString),  `Command 'names' must be array of strings`)
+        assert(_.isString(accessString), `Command 'access' must be a string but ${typeof accessString} given`)
         assert(_.isFunction(execute),    "Command 'execute' function must be a function")
-
-        // Save categories to use later.
-        this._commandCategories = new Set([...this._commandCategories, ...categories])
 
         // Normalize arguments.
         names = names.map(name => name.trim().toLowerCase())
         execute = execute.bind(this)
-        const accessFn = parseAccessStrings(accessStrings)
+        const _accessFn = (accessString
+            ? parseAccessStringWithRoles(accessString, this._roles)
+            : _.stubTrue)
 
-        // Create and freeze command to prevent changes in it.
-        const command = {
-            names, help, categories,
-            access: accessStrings, accessFn,
-            execute
-        }
+        // Make and freeze command to prevent changes in it.
+        command = { ...command, names, access: accessString, _accessFn, execute }
         deepFreeze(command)
         names.forEach(name => {
             this._commands[name] = command
@@ -165,24 +154,15 @@ export default class Haxilium extends DelegatedHaxballRoom {
     }
 
     /**
-     * Get all commands in a specific category.
-     * @param  {String}   category Name of the category.
-     * @return {Object[]}          Array of commands in a specific category.
+     * Get commands that match 'filterFn' function.
+     * @param  {Function} filterFn Function that filters commands.
+     * @return {Object[]}          Array of commands.
      */
-    getCommandsByCategory(category) {
-        // 'this._commands' is a lookup table of commands. Can contain duplicates.
+    getCommands(filterFn = _.stubTrue) {
         return _(this._commands)
-            .filter(command => command.categories.includes(category))
+            .filter(filterFn)
             .uniq()
             .value()
-    }
-
-    /**
-     * Get all existing command categories.
-     * @return {String[]} Command categories.
-     */
-    getCommandCategories() {
-        return Array.from(this._commandCategories)
     }
 
     /**
@@ -191,9 +171,10 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param  {String}       rawCommand  A raw command string to parse and execute.
      */
     executeCommand(player, rawCommand = '') {
-        const args = rawCommand.trim().split(/\s+/)
+        assert(_.isString(rawCommand), `Command must be a string but ${typeof rawCommand} is given`)
 
         // First argument(always lowercase) is name of command.
+        const args = rawCommand.trim().split(/\s+/)
         const name = args[0] = _.toLower(args[0])
         const command = this._commands[name]
 
@@ -201,14 +182,12 @@ export default class Haxilium extends DelegatedHaxballRoom {
             throw new this.CommandNotFoundError(`Unknown command "${name}"`)
         }
 
-        // Determine if SOME player's rights match EVERY access function.
-        const playerRights = this._getPlayerRights(player)
-        const canExecute = playerRights.some(rights =>
-            command.accessFn(rights))
+        const playerRole = this._roles[this._getPlayerRole(player)] || 0
+        const canExecute = command._accessFn(playerRole)
 
         if (!canExecute) {
             throw new this.AccessToCommandDeniedError(
-                `${player.name} doesn't have enough rights to execute "${name}"`)
+                `${player.name} isn't allowed to execute "${name}"`)
         }
 
         return command.execute(player, args)
@@ -285,13 +264,16 @@ export default class Haxilium extends DelegatedHaxballRoom {
         const defaultPlayer = _.mapValues(config.player, options => options.default)
         this._playerFactory = () => _.cloneDeep(defaultPlayer)
 
-        // Get function which calculates player's rights. Or make default one.
-        this._getPlayerRights = config.playerRights || (p => [0])
+        // Get player roles.
+        this._roles = createEnum(config.roles || [])
+
+        // Get function which calculates player's role. Or make default one.
+        this._getPlayerRole = config.getRole || (p => '')
         // Get function which filters players when getting them using 'getPlayerList'. Or make default one.
         this._playerFilter    = config.playerFilter || _.stubTrue
 
-        assert(_.isFunction(this._getPlayerRights), "'player.rights' must be a function")
-        assert(_.isFunction(this._playerFilter),    "'player.filter' must be a function")
+        assert(_.isFunction(this._getPlayerRole), "'config.getRole' must be a function")
+        assert(_.isFunction(this._playerFilter),  "'player.filter' must be a function")
     }
 
     /**
