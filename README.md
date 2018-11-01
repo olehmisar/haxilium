@@ -239,6 +239,41 @@ Also, you can make more complicated `access` strings. For example:
 - `'<player || >admin'` will allow command execution only for players whose role is less `(<)` than `'player'` or `(||)` greater `(>)` than `'admin'`.
 
 
+### Get commands
+It is useful to retrieve commands when we need them. For example, we are going to make user-friendly bot that has `!help` command in it. We use `getCommand(name: string)` to get command by name and `getCommands(filterFn: function)` to get all commands which match `filterFn` function:
+```js
+// Add '!afk' command.
+room.addCommand({
+    names: ['afk'],
+    // Define 'help' field for command. It will be saved with other custom fields that you define on CommandObject.
+    help: 'Toggle your afk status',
+    execute(player, args) {
+        this.setPlayerAfk(player.id, !player.afk)
+    }
+})
+
+room.addCommand({
+    names: ['help'],
+    execute(player, args) {
+        const commandName = args[1]
+        if (commandName) {
+            // Send command help message to the player.
+            const command = this.getCommand(commandName)
+            this.sendChat(command.help)
+        } else {
+            // Send list of commands that have 'help' field.
+            const commandNames = this.getCommands(command => command.help !== undefined)
+                .map(command => command.names[0])
+                .join(', ')
+
+            this.sendChat(commandNames)
+        }
+    }
+})
+```
+
+Now, if player types `!help afk` in chat, he will get "Toggle your afk status" help message. And when he writes just `!help` command he will get full list of commands which provide help messages.
+
 ## Module system
 __WARNING! Module system isn't ready yet. Maybe there will be breaking changes!__
 <!-- TODO: add 'defaultState' and 'methods' description -->
