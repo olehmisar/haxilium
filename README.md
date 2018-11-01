@@ -166,7 +166,6 @@ room.on('playerChat', function (player, message) {
 
 
 ### Add commands
-__WARNING! Command system isn't ready yet. Maybe there will be breaking changes!__
 <!-- TODO: describe command making better. -->
 
 Creating commands is very simple with Haxilium. Just use `addCommand(command: CommandObject)`. We will make command that adds two numbers provided by player. For example: `add 2 5` will send "2 + 5 = 7" to player. Now let's look at code:
@@ -197,6 +196,47 @@ room.on('playerChat', function (player, message) {
 ```
 
 __NOTE__ that we pass a `string` to the `executeCommand(player, command)`. For example: `executeCommand(player, 'add 2 5')`. After that, the command will be parsed and passed to the `execute(player, args)` function. `args` is an __array of strings__. First argument `args[0]` is the name of the command. In our case, `args[0] === 'add'`, `args[1] === '2'` and `args[2] === '5'`.
+
+When we are going to make a big project, we want to make roles for players. For example, we don't want `!kick` command to be available for every player but only for admins. So, we introduce roles in our project. All roles are specified in config under the `roles` field and are an array similar to this: `['player', 'admin']`. Roles array is an hierarchy where roles that has smaller index are lower in the hierarchy table. In our array `'player'` < `'admin'` because `'player'` has smaller index than `'admin'` in `['player', 'admin']` array. To calculate role for every player we specify `getRole(player: PlayerObject)` in config:
+```js
+import haxilium from 'haxilium'
+
+const room = haxilium({
+    roomName: 'Haxilium Room',
+    playerName: 'Haxilium Bot',
+    maxPlayers: 10,
+
+    // Define additional fields for player object.
+    player: {
+        afk: false
+    },
+    // Array of roles.
+    roles: ['player', 'admin'],
+    getRole(player) {
+        // Only players who have admin rights in the room can access admin commands.
+        if (player.admin) return 'admin'
+        // All other players have basic rights.
+        else              return 'player'
+    }
+})
+```
+
+Now let's define `!kick` command. We use `access` property on `CommandObject` to limit access to this command:
+```js
+room.addCommand({
+    names: ['kick'],
+    // For all players whose role is greater or equal (>=) to 'admin'
+    access: '>=admin',
+    execute(player, args) {
+        const badPlayerId = Number(args[1])
+        this.kickPlayer(badPlayerId, 'Kick by ' + player.name)
+    }
+})
+```
+
+Also, you can make more complicated `access` strings. For example:
+- `'>player && <admin'` will allow command execution only for players whose role is greater `(>)` than `'player'` and `(&&)` less `(<)` than `'admin'`
+- `'<player || >admin'` will allow command execution only for players whose role is less `(<)` than `'player'` or `(||)` greater `(>)` than `'admin'`.
 
 
 ## Module system
