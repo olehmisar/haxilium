@@ -79,7 +79,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * Attach callbacks to the event.
      * @param  {String}                eventName Event name. Can be PascalCase, camelCase or kebab-case.
      * @param  {(Function|Function[])} callbacks Function or array of functions which will be called when event fires.
-     * @return {Function}                        Unbind callbacks function. Uses to unbind just binded callbacks. No parameters.
+     * @return {Function}                        Function that detaches just attached callbacks.
      */
     on(eventName, callbacks) {
         callbacks = _.castArray(callbacks).map(cb => cb.bind(this))
@@ -112,6 +112,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     /**
      * Add command to room object. Later it can be called using 'executeCommand'.
+     * @param {Object}   command         Command options.
      * @param {String[]} command.names   Array of names of the command.
      * @param {String    command.access  Boolean expression which determines if player can execute this command.
      *                                   Examples: '>=admin' will allow only players with 'admin' or higher role to execute command,
@@ -122,14 +123,14 @@ export default class Haxilium extends DelegatedHaxballRoom {
     addCommand(command) {
         let { names, access: accessString = '', execute } = command
 
-        // Validate arguments.
+        // Validate props.
         assert(_.isArray(names),         "Command 'names' must be array of strings")
         assert(names.length > 0,         'Command must have at least one name')
         assert(names.every(_.isString),  `Command 'names' must be array of strings`)
         assert(_.isString(accessString), `Command 'access' must be a string but ${typeof accessString} given`)
         assert(_.isFunction(execute),    "Command 'execute' function must be a function")
 
-        // Normalize arguments.
+        // Normalize props.
         names = names.map(name => name.trim().toLowerCase())
         execute = execute.bind(this)
         const _accessFn = (accessString
@@ -333,7 +334,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
     }
 
     /**
-     * Execute callbacks which are binded to specific event.
+     * Execute callbacks which are attached to specific event.
      * @param  {String} eventName    Name of the event which is fired.
      * @param  {Array}  callbackArgs Array of arguments which are passed to the callbacks.
      * @return {(Boolean|Undefined)} Returns 'false' if some callback returns 'false', otherwise 'undefined'.
