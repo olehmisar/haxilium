@@ -120,7 +120,7 @@ const room = haxilium({
 })
 ```
 
-Now we can use `player.afk`, `setPlayerAfk(playerID: int, afk: bool)` and `playerAfkChange(player: PlayerObject)` in our code. We will catch player's message and if it is "afk" then we will toggle player's afk status. After afk status is changed, all `playerAfkChange(player: PlayerObject)` callbacks will be called. We register one callback which will notify other players about someone is afk.
+Now we can use `player.afk`, `setPlayerAfk(playerID: int, afk: bool)` and `playerAfkChange(player: PlayerObject)` in our code. We will catch player's message and if it is `'afk'` then we will toggle player's afk status. After afk status is changed, all `playerAfkChange(player: PlayerObject)` callbacks will be called. We register one callback which will notify other players about someone is afk.
 
 _Don't use this code in your real project because there is a better solution using [commands](#add-commands)._
 ```js
@@ -145,7 +145,7 @@ room.on('playerAfkChange', function (player) {
 
 
 ### Create methods
-Besides default methods and methods which are automatically created for us by Haxilium(e.g., `setPlayerAfk()` from the [above section](#extend-player-object)), we can create our own methods. We use `method(name: string, methodFn: function)` to attach `methodFn` function to the room under the `name` name. In the following code we create function which adds "INFO: " prefix to the message that we want to send to the player:
+Besides default methods and methods which are automatically created for us by Haxilium(e.g., `setPlayerAfk()` from the [above section](#extend-player-object)), we can create our own methods. We use `method(name: string, methodFn: function)` to attach `methodFn` function to the room under the `name` name. In the following code we create function which adds `'INFO: '` prefix to the message that we want to send to the player:
 ```js
 room.method('sendChatInfo', function (message, playerID) {
     // 'this' refers to the 'room' object. Don't use 'room' inside of callbacks, methods etc.
@@ -154,7 +154,7 @@ room.method('sendChatInfo', function (message, playerID) {
 })
 ```
 
-Then we can use `sendChatInfo(message: string, playerID: int)`. If player types "get info" in a chat we will send some info message to him:
+Then we can use `sendChatInfo(message: string, playerID: int)`. If player types `'get info'` in a chat we will send some info message to him:
 ```js
 room.on('playerChat', function (player, message) {
     if (message === 'get info') {
@@ -168,7 +168,7 @@ room.on('playerChat', function (player, message) {
 ### Add commands
 <!-- TODO: describe command making better. -->
 
-Creating commands is very simple with Haxilium. Just use `addCommand(command: CommandObject)`. We will make command that adds two numbers provided by player. For example: `add 2 5` will send "2 + 5 = 7" to player. Now let's look at code:
+Creating commands is very simple with Haxilium. Just use `addCommand(command: CommandObject)`. We will make command that adds two numbers provided by player. For example: `add 2 5` will send `'2 + 5 = 7'` to player. Now let's look at code:
 ```js
 room.addCommand({
     names: ['add'],
@@ -272,13 +272,86 @@ room.addCommand({
 })
 ```
 
-Now, if player types `!help afk` in chat, he will get "Toggle your afk status" help message. And when he writes just `!help` command he will get full list of commands which provide help messages.
+Now, if player types `!help afk` in chat, he will get `'Toggle your afk status'` help message. And when he writes just `!help` command he will get full list of commands which provide help messages.
 
 ## Module system
-__WARNING! Module system isn't ready yet. Maybe there will be breaking changes!__
-<!-- TODO: add 'defaultState' and 'methods' description -->
 
-Haxilium provides module registration system. Module is an object which contains following fields: `defaultState`, `methods`, `callbacks` and `commands`. Let's look at a module which creates afk system:
+### Introduction
+Haxilium provides module system. Module is an object which contains following fields: `name`, `defaultState`, `methods`, `callbacks` and `commands`. `name` is required, all other fields are optional. Let's look at module example. The following module includes:
+- `testModule` name
+- `testMessage` state property
+- `sendTestMessage()` method
+- `playerJoin()` callback
+- x2 `playerChat()` callbacks
+- `!test` command
+
+```js
+const testModuleObject = {
+    name: 'testModule',
+    // Define default state of the module. We will be able to access this state object later.
+    defaultState: {
+        testMessage: 'This is a test message. Room is working properly'
+    },
+    methods: {
+        sendTestMessage() {
+            // Retrieve 'testMessage' from room state.
+            // The path is        'this.state.moduleName.variableName'.
+            // In our case, it is 'this.state.testModule.testMessage'.
+            this.sendChat(this.state.testModule.testMessage)
+        }
+    },
+    callbacks: {
+        playerJoin(player) {
+            this.sendChat('Type !test to get test message')
+        },
+        // Pass an array of callbacks.
+        playerChat: [
+            function (player, message) {
+                if (message == '!test') {
+                    executeCommand(player, 'test')
+                }
+            },
+            function (player, message) {
+                // Log all the messages.
+                console.log(`${player.name}: ${message}`)
+            }
+        ]
+    },
+    commands: [{
+        names: ['test'],
+        execute() {
+            this.sendTestMessage()
+        }
+    }]
+}
+```
+
+Now we have to register that module:
+```js
+room.registerModule(testModuleObject)
+```
+
+Ok, that was a lot of code. Let's analyze it in details.
+1. We define `name` property of the module which is set to `'testModule'`. It is name of the module which we will use later.
+2. The next piece is `defaultState` object. We can see `testMessage` variable in it. Later, we will be able to retrieve this variable using `this.state.testModule.testMessage`.
+3. After `defaultState` we define `methods`. It is an object where __keys__ are __names__ of methods and __values__ are __methods__ themselves. Nothing special.
+4. Then we see `callbacks` object. Like `methods`, __keys__ are __names of events__ and __values__ are __callbacks__ or __arrays of callbacks__.
+5. The last field we have defined is `commands` array. It is array of command objects. Click [here](#add-commands) for detail info about commands.
+
+That's all! That is our module! Now, when player join the room he will see `'Type !test to get test message'`. Then, if he wants, he can write `!test` in chat and he will receive `'This is a test message. Room is working properly'` message. Also, we `console.log()` every message players send.
+
+Also, if we don't need this `testModule` anymore, we can deregister it by its name:
+```js
+room.deregisterModule(testModuleObject.name)
+```
+or
+```js
+room.deregisterModule('testModule')
+```
+
+
+### Afk module example
+Below you can see example of afk system module:
 ```js
 import haxilium from 'haxilium'
 
@@ -299,6 +372,7 @@ room.on('playerChat', function (player, message) {
 
 // Define afk module.
 const afkModule = {
+    name: 'afk',
     callbacks: {
         playerAfkChange(player) {
             if (player.afk) this.sendChat(`${player.name} is afk`)
@@ -320,11 +394,11 @@ const afkModule = {
     }]
 }
 
-// Register(bind) afk module.
-room.bindModule(afkModule)
+// Register afk module.
+room.registerModule(afkModule)
 ```
 
-Module is binded! Now players can use two commands: `!afk` and `!afklist` (or `!afks`).
+Module is registered! Now players can use two (or three) commands: `!afk` and `!afklist` (or `!afks`).
 
 
 [Haxball Headless API]: https://github.com/haxball/haxball-issues/wiki/Headless-Host
