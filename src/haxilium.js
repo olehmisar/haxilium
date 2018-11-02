@@ -15,6 +15,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
     SPECT = 0
     RED = 1
     BLUE = 2
+    _modules = {}
     _players = {}
     _commands = {}
     _roles = {}
@@ -28,51 +29,87 @@ export default class Haxilium extends DelegatedHaxballRoom {
     }
 
     /**
-     * Bind module to the room.
+     * Register room module.
      * @param {Object}   module              Module object.
-     * @param {Object}   module.defaultState An object where you put all module related variables. This object will be recursively merged with 'defaultState's of other modules and will be set as 'state' property of the room.
-     * @param {Object}   module.methods      An object of methods which will be attached to the room. Keys of object are names of methods and values of object are methods themselves.
-     * @param {Object}   module.callbacks    An object of callbacks which will be registered. Keys of object are names of events and values are callback functions or arrays of callback functions.
+     * @param {String}   module.name         An unique string module identificator(name).
+     * @param {Object}   module.defaultState An object where you put all module related variables. This
+     *                                       object will be recursively merged with 'defaultState's of
+     *                                       other modules and will be set as 'state' property of the room.
+     * @param {Object}   module.methods      An object of methods which will be attached to the room.
+     *                                       Keys of object are names of methods and values of object
+     *                                       are methods themselves.
+     * @param {Object}   module.callbacks    An object of callbacks which will be registered. Keys of
+     *                                       object are names of events and values are callback functions
+     *                                       or arrays of callback functions.
      * @param {Object[]} module.commands     An array of commands to register.
      */
-    bindModule(module) {
-        const { defaultState, methods, callbacks, commands } = module
+    registerModule(module) {
+        const { name, defaultState = {}, methods = {}, callbacks = {}, commands = [] } = module
+        module = { name, defaultState, methods, callbacks, commands }
+
+        // Validate module.
+        assert(_.isString(name) && name.trim() !== '',
+                                         `Module 'name' must be a string but ${typeof name} given`)
+        assert(_.isUndefined(this._modules[name]),
+                                         `Module with ${name} 'name' already exists`)
+        assert(_.isObject(defaultState), `Module 'defaultState' must be an object but ${typeof defaultState} given`)
+        assert(_.isObject(methods),      `Module 'methods' must be an object of functions but ${typeof methods} given`)
+        assert(_.isObject(callbacks),    `Module 'callbacks' must be an object of functions but ${typeof callbacks} given`)
+        assert(_.isArray(commands),      `Module 'commands' must be an array of commands but ${typeof commands} given`)
 
         // Register module callbacks.
-        let callbackUnbinds = []
-        if (_.isObject(callbacks)) {
-            callbackUnbinds = _.toPairs(callbacks).map(([eventName, callback]) =>
-                this.on(eventName, callback))
-        }
+        module._callbackDetachFunctions = []
+        _.forOwn(callbacks, (callback, eventName) => {
+            const detach = this.on(eventName, callback)
+            module._callbackDetachFunctions.push(detach)
+        })
 
         // Register module methods.
-        if (_.isObject(methods)) {
-            _.toPairs(methods).forEach(([methodName, method]) => {
-                // TODO: smarter method intersection detection.
-                // assert(_.isUndefined(this[methodName]),
-                //     `Module method intersection error. ${methodName} already exists on room object`)
+        _.forOwn(methods, (method, methodName) => {
+            assert(_.isUndefined(this[methodName]),
+                `Module method intersection error. ${methodName} already exists`)
 
-                this.method(methodName, method)
-            })
-        }
+            this.method(methodName, method)
+        })
 
         // Add commands.
-        if (_.isObject(commands)) {
-            // TODO: check commands intersection.
-            commands.forEach(command => this.addCommand(command))
-        }
+        const existingCommands = this.getCommands()
+        commands.forEach(command => {
+            const conflictingNames = _(existingCommands)
+                .map(c => _.intersection(c.names, command.names))
+                .flatten()
+                .join(', ')
 
-        // Merge module state with current state.
-        // TODO: check intersections for states.
-        if (_.isObject(defaultState)) {
-            this.state = _.merge(defaultState, this.state)
-        }
+            assert(conflictingNames === '', `Command intersection found in ${name} module. Commands with names "${conflictingNames}" already exist`)
+            this.addCommand(command)
+        })
 
-        // TODO: unbind module.
-        // return function unbindModule() {
-        //     callbackUnbinds.forEach(unbind => unbind())
 
-        // }
+        // Add state of module.
+        this.state[name] = defaultState
+
+        // Save module.
+        this._modules[name] = module
+    }
+
+    /**
+     * Deregister room module.
+     * @param {String} moduleName Name of the module which will be deregistered.
+     */
+    deregisterModule(moduleName) {
+        const module = this._modules[moduleName]
+        // TODO: Throw an error here.
+        if (!module) return
+
+        delete this.state[moduleName]
+        module._callbackDetachFunctions.map(detach => detach())
+        _.keys(module.methods, methodName => { delete this[methodName] })
+
+        _(module.commands).map('names')
+            .flatten()
+            .forEach(name => { delete this._commands[name] });
+
+        delete this._modules[moduleName]
     }
 
     /**
