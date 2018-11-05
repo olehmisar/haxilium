@@ -45,7 +45,7 @@ In addition, Haxilium provides more `RoomConfig` properties:
 - `roles: string[]`
 - `getRole(): function`
 
-More info about `roles` and `getRole()` you can find in [command system section](#add-commands). `player` property is an object where you put additional [`PlayerObject`][Haxball Headless API player object] properties where __key__ is __name__ of property and __value__ is __default value__ of property:
+More info about `roles` and `getRole()` you can find in [command system section](#player-roles). `player` property is an object where you put additional [`PlayerObject`][Haxball Headless API player object] properties where __key__ is __name__ of property and __value__ is __default value__ of property:
 ```js
 const room = haxilium({
     roomName: 'Haxilium room',
@@ -172,7 +172,12 @@ To see full list of methods visit [this page][Haxball Headless API methods].
 ### Add commands
 <!-- TODO: describe command making better. -->
 
-Creating commands is very simple with Haxilium. Just use `addCommand(command: CommandObject)`. We will make command that adds two numbers provided by player. For example: `add 2 5` will send `'2 + 5 = 7'` to player. Now let's look at code:
+Creating commands is very simple with Haxilium. Just use `addCommand(command: CommandObject)`. `CommandObject` has only 3 properties:
+- `names: string[]` - names of command
+- `execute: function(player: PlayerObject, args: string[])` - the command function itself. Accepts `PlayerObject` who executes command as first parameter and `args` array as second parameter
+- `access: string` - boolean expression which determines if player can or cannot execute this command. Optional. [More info](#player-roles)
+
+We will make command that adds two numbers provided by player. For example: `add 2 5` will send `'2 + 5 = 7'` message to the player. Now let's look at code:
 ```js
 room.addCommand({
     names: ['add'],
@@ -181,6 +186,7 @@ room.addCommand({
         // And rest arguments are arguments after name of the command.
         assert(args[0] === 'add')
 
+        // Convert strings to numbers.
         const a = Number(args[1])
         const b = Number(args[2])
         this.sendChat(`${a} + ${b} = ${a + b}`, player.id)
@@ -201,6 +207,8 @@ room.on('playerChat', function (player, message) {
 
 __NOTE__ that we pass a `string` to the `executeCommand(player, command)`. For example: `executeCommand(player, 'add 2 5')`. After that, the command will be parsed and passed to the `execute(player, args)` function. `args` is an __array of strings__. First argument `args[0]` is the name of the command. In our case, `args[0] === 'add'`, `args[1] === '2'` and `args[2] === '5'`.
 
+
+### Player roles
 When we are going to make a big project, we want to make roles for players. For example, we don't want `!kick` command to be available for every player but only for admins. So, we introduce roles in our project. All roles are specified in config under the `roles` field and are an array similar to this: `['player', 'admin']`. Roles array is an hierarchy where roles that has smaller index are lower in the hierarchy table. In our array `'player'` < `'admin'` because `'player'` has smaller index than `'admin'` in `['player', 'admin']` array. To calculate role for every player we specify `getRole(player: PlayerObject)` in config:
 ```js
 import haxilium from 'haxilium'
@@ -277,6 +285,7 @@ room.addCommand({
 ```
 
 Now, if player types `!help afk` in chat, he will get `'Toggle your afk status'` help message. And when he writes just `!help` command he will get full list of commands which provide help messages.
+
 
 ## Module system
 
