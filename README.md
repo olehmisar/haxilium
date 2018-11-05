@@ -59,7 +59,7 @@ room.on('playerJoin', function (player) {
 
 In result, we have two registered callbacks. First one will `console.log()` that player has joined the room. Second callback will greet that player.
 
-__NOTE__ that registration __order__ of callbacks __matters__. This means that __first callback__ will be called __earlier__ than __second one__.
+__NOTE__ that registration __order__ of callbacks __matters__. This means that __second callback__ will be called __after__ __first one__, __third__ will be called __after__ __second__ etc.
 
 Also we can pass an array of callbacks to register them in one go:
 ```js
