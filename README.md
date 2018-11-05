@@ -102,7 +102,7 @@ room.on('playerJoin', function (player) {
 })
 ```
 
-__NOTE__ that event name is __not__ sensitive to different styles of cases. In other words, `player-join`, `PlayerJoin` and `playerJoin` is the same event but `pLayerJOin`, `PlAyerjoin` and `plAYerJoin` are different. There must be clear difference. I recommend to use `camelCase` for event names and I will use it in the next sections.
+__NOTE__ that event name is __not__ sensitive to different styles of cases. In other words, `player-join`, `PlayerJoin` and `playerJoin` is the same event but `pLayerJOin`, `PlAyerjoin` and `plAYerJoin` are different. There must be clear difference between them. I recommend to use `camelCase` for event names and I will use it in the next sections.
 
 Ok, let's add one more callback which will greet player when he joins the room:
 ```js
