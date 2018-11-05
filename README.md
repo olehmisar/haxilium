@@ -146,7 +146,9 @@ To see full list of events visit [this page][Haxball Headless API events].
 
 
 ### Create methods
-Besides default methods and methods which are automatically created for us by Haxilium(e.g., `setPlayerAfk()` from the [above section](#extend-player-object)), we can create our own methods. We use `method(name: string, methodFn: function)` to attach `methodFn` function to the room under the `name` name. In the following code we create function which adds `'INFO: '` prefix to the message that we want to send to the player:
+[Full list of room methods][Haxball Headless API methods]
+
+Besides default methods and methods which are automatically created for us by Haxilium(e.g., `setPlayerAfk()` from the [above section](#playerobject-extension)), we can create our own methods. We use `method(name: string, methodFn: function)` to attach `methodFn` function to the room under the `name` name. In the following code we create function which adds `'INFO: '` prefix to the message that we want to send to the player:
 ```js
 room.method('sendChatInfo', function (message, playerID) {
     // 'this' refers to the 'room' object. Don't use 'room' inside of callbacks, methods etc.
@@ -164,6 +166,7 @@ room.on('playerChat', function (player, message) {
     }
 })
 ```
+To see full list of methods visit [this page][Haxball Headless API methods].
 
 
 ### Add commands
@@ -403,6 +406,9 @@ Module is registered! Now players can use two (or three) commands: `!afk` and `!
 
 
 [Haxball Headless API]: https://github.com/haxball/haxball-issues/wiki/Headless-Host
+
 [Haxball Headless API events]: https://github.com/haxball/haxball-issues/wiki/Headless-Host#onplayerjoinplayer--playerobject--void
+[Haxball Headless API methods]: https://github.com/haxball/haxball-issues/wiki/Headless-Host#sendchatmessage--string-targetid--int--void
+
 [Haxball Headless API room config]: https://github.com/haxball/haxball-issues/wiki/Headless-Host#roomconfigobject
 [Haxball Headless API player object]: https://github.com/haxball/haxball-issues/wiki/Headless-Host#playerobject
