@@ -36,9 +36,64 @@ const room = haxilium({
 ```
 The above code will create a __public__ haxball room with "__Haxilium Room__" name , "__Haxilium Bot__" player(bot) name, maximum amount of players of __10__ and with geolocation of __England__.
 
+#### `RoomConfig`
+`RoomConfig` is the same as in [Haxball Headless API]. You can look at description of room config [here][Haxball Headless API room config].
+
+#### `PlayerObject` extension
+In addition, Haxilium provides more `RoomConfig` properties:
+- `player: object`
+- `roles: string[]`
+- `getRole(): function`
+
+More info about `roles` and `getRole()` you can find in [command system section](#add-commands). `player` property is an object where you put additional [`PlayerObject`][Haxball Headless API player object] properties where __key__ is __name__ of property and __value__ is __default value__ of property:
+```js
+const room = haxilium({
+    roomName: 'Haxilium room',
+    player: {
+        afk: false,
+        confirmed: false
+    }
+})
+```
+
+In the above code we see that we've made two additional `PlayerObject` properties with `false` as default value of both:
+- `afk`
+- `confirmed`
+
+Two room methods are created automatically:
+- `setPlayerAfk(playerID: int, afk: bool)`
+- `setPlayerConfirmed(playerID: int, confirmed: bool)`
+
+And two events are created automatically too. Signatures of callbacks for them are:
+- `playerAfkChange(player: PlayerObject)`
+- `playerConfirmedChange(player: playerObject)`
+
+The next code sample is an example of using `afk` property. We will toggle player's `afk` property when he writes `'afk'` in chat. In this code we use callbacks and methods. If you are not familiar with them you can skip this code snippet.
+
+_Don't use this code in your real project because there is a better solution using [commands](#add-commands)._
+```js
+room.on('playerChat', function (player, message) {
+    if (message === 'afk') {
+        // Use `setPlayerAfk()` method.
+        if (player.afk) {
+            this.setPlayerAfk(player.id, false)
+        } else
+            this.setPlayerAfk(player.id, true)
+        }
+    }
+})
+
+// Register callback for 'playerAfkChange()' event.
+room.on('playerAfkChange', function (player) {
+    // Notify players about someone is (is not) afk.
+    if (player.afk) this.sendChat(player.name + ' is afk')
+    else            this.sendChat(player.name + ' is not afk')
+})
+```
+
 
 ### Attach callbacks
-[Full list of events.][Haxball Headless API events]
+[Full list of events][Haxball Headless API events]
 
 To attach callback to the event we use `on(event: string, callbackFn: function)`. For example, a `playerJoin` event will be fired when a player joins the room. We register a callback that notifies us when some player joins the room:
 ```js
@@ -88,59 +143,6 @@ detach()
 ```
 
 To see full list of events visit [this page][Haxball Headless API events].
-
-
-### Extend player object
-<!-- TODO: describe player extension better. -->
-
-We can extend player object if we pass `player` field to the `RoomConfig`. In the following code we:
-1. add `afk` property to the player object
-2. create `setPlayerAfk(playerID: int, afk: bool)` method on the room object
-3. create `playerAfkChange(player: PlayerObject)` event
-
-```js
-import haxilium from 'haxilium'
-
-const room = haxilium({
-    roomName: 'Haxilium Room',
-    playerName: 'Haxilium Bot',
-    maxPlayers: 10,
-    public: true,
-    geo: { code: 'en', lat: 52, lon: 0 },
-
-    // Define additional fields for player object.
-    player: {
-        // Here we create 'afk' field on 'PlayerObject', so later we will use it: 'player.afk'.
-        // 'false' is the default value.
-        // 'setPlayerAfk(playerID: int, afk: bool)' is created automatically.
-        // 'playerAfkChange(player: PlayerObject)' is also created automatically.
-        afk: false
-    }
-})
-```
-
-Now we can use `player.afk`, `setPlayerAfk(playerID: int, afk: bool)` and `playerAfkChange(player: PlayerObject)` in our code. We will catch player's message and if it is `'afk'` then we will toggle player's afk status. After afk status is changed, all `playerAfkChange(player: PlayerObject)` callbacks will be called. We register one callback which will notify other players about someone is afk.
-
-_Don't use this code in your real project because there is a better solution using [commands](#add-commands)._
-```js
-room.on('playerChat', function (player, message) {
-    if (message === 'afk') {
-        // Use `setPlayerAfk()` method.
-        if (player.afk) {
-            this.setPlayerAfk(player.id, false)
-        } else
-            this.setPlayerAfk(player.id, true)
-        }
-    }
-})
-
-// Register callback for 'playerAfkChange()' event.
-room.on('playerAfkChange', function (player) {
-    // Notify players about someone is (is not) afk.
-    if (player.afk) this.sendChat(player.name + ' is afk')
-    else            this.sendChat(player.name + ' is not afk')
-})
-```
 
 
 ### Create methods
@@ -402,3 +404,5 @@ Module is registered! Now players can use two (or three) commands: `!afk` and `!
 
 [Haxball Headless API]: https://github.com/haxball/haxball-issues/wiki/Headless-Host
 [Haxball Headless API events]: https://github.com/haxball/haxball-issues/wiki/Headless-Host#onplayerjoinplayer--playerobject--void
+[Haxball Headless API room config]: https://github.com/haxball/haxball-issues/wiki/Headless-Host#roomconfigobject
+[Haxball Headless API player object]: https://github.com/haxball/haxball-issues/wiki/Headless-Host#playerobject
