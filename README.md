@@ -64,15 +64,14 @@ __NOTE__ that registration __order__ of callbacks __matters__. This means that _
 Also we can pass an array of callbacks to register them in one go:
 ```js
 function cb0() {
-    console.log('cb0')
+    console.log('This message is shown first')
 }
 
 function cb1() {
-    console.log('cb1')
+    console.log('This message is shown second')
 }
 
-const callbacks = [cb0, cb1]
-room.on('playerJoin', callbacks)
+room.on('playerJoin', [cb0, cb1])
 ```
 
 When we don't want to use a callback anymore we can detach it:
