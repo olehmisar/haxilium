@@ -311,7 +311,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
         this._playerFilter    = config.playerFilter || _.stubTrue
 
         assert(_.isFunction(this._getPlayerRole), "'config.getRole' must be a function")
-        assert(_.isFunction(this._playerFilter),  "'player.filter' must be a function")
+        assert(_.isFunction(this._playerFilter),  "'config.playerFilter' must be a function")
     }
 
     /**
