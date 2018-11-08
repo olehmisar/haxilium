@@ -174,7 +174,7 @@ To see full list of methods visit [this page][Haxball Headless API methods].
 
 Creating commands is very simple with Haxilium. Just use `addCommand(command: CommandObject)`. `CommandObject` has only 3 properties:
 - `names: string[]` - names of command
-- `execute: function(player: PlayerObject, args: string[])` - the command function itself. Accepts `PlayerObject` who executes command as first parameter and `args` array as second parameter
+- `execute(player: PlayerObject, args: string[]): function` - the command function itself. Accepts `PlayerObject` who executes command as first parameter and `args` array as second parameter
 - `access: string` - boolean expression which determines if player can or cannot execute this command. Optional. [More info](#player-roles)
 
 We will make command that adds two numbers provided by player. For example: `add 2 5` will send `'2 + 5 = 7'` message to the player. Now let's look at code:
@@ -246,9 +246,10 @@ room.addCommand({
 })
 ```
 
-Also, you can make more complicated `access` strings. For example:
+Also, you can make more complicated `access` strings. Available operators are: `==`(`===`), `>`, `>=`, `<`, `<=`, `||`, `&&` and parenthesis `()` for precedence. For example:
 - `'>player && <admin'` will allow command execution only for players whose role is greater `(>)` than `'player'` and `(&&)` less `(<)` than `'admin'`
 - `'<player || >admin'` will allow command execution only for players whose role is less `(<)` than `'player'` or `(||)` greater `(>)` than `'admin'`.
+- `'<player || (>player && <admin)'` will allow command execution only for players whose role is less `(<)` than `'player'` or `(||)` greater `(>)` than `'player'` and `(&&)` less `(<)` than `'admin'`. Notice parenthesis.
 
 
 ### Get commands
