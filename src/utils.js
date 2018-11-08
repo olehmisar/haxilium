@@ -11,7 +11,7 @@ export function isPlayerObject(obj) {
     }
     return true
 }
-window.parseAccessStringWithRoles = parseAccessStringWithRoles
+
 export function parseAccessStringWithRoles(rawStr, roles) {
     let str = rawStr.trim()
 
