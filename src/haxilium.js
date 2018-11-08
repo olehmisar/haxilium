@@ -392,7 +392,6 @@ export default class Haxilium extends DelegatedHaxballRoom {
                 cbReturns.push(callbacks[i](...callbackArgs))
             } catch (err) {
                 console.error(err)
-                this.sendChat('WARNING! There is an error in the code!')
             }
         }
         // If some callback has returned 'false' then return false
