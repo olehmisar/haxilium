@@ -53,11 +53,25 @@ export default class Haxilium extends DelegatedHaxballRoom {
                                          `Module 'name' must be a string but ${typeof name} given`)
         assert(_.isUndefined(this._modules[name]),
                                          `Module with ${name} name already exists`)
+
         assert(_.isObject(player),       `Module 'player' must be an object but ${typeof player} given`)
         assert(_.isObject(defaultState), `Module 'defaultState' must be an object but ${typeof defaultState} given`)
+
         assert(_.isObject(methods),      `Module 'methods' must be an object of functions but ${typeof methods} given`)
+        _.keys(methods).forEach(methodName => assert(_.isUndefined(this[methodName]),
+                `Module method intersection error. ${methodName} already exists`))
+
         assert(_.isObject(callbacks),    `Module 'callbacks' must be an object of functions but ${typeof callbacks} given`)
+
         assert(_.isArray(commands),      `Module 'commands' must be an array of commands but ${typeof commands} given`)
+        const existingCommands = this.getCommands()
+        commands.forEach(command => {
+            const conflictingNames = _(existingCommands)
+                .map(c => _.intersection(c.names, command.names))
+                .flatten()
+                .join(', ')
+            assert(conflictingNames === '', `Command intersection found in ${name} module. Commands with names "${conflictingNames}" already exist`)
+        })
 
         // Register module callbacks.
         module._callbackDetachFunctions = []
@@ -73,28 +87,8 @@ export default class Haxilium extends DelegatedHaxballRoom {
             module._playerPropertyDetachFunctions.push(detachProp)
         })
 
-        // Register module methods.
-        _.forOwn(methods, (method, methodName) => {
-            assert(_.isUndefined(this[methodName]),
-                `Module method intersection error. ${methodName} already exists`)
-
-            this.method(methodName, method)
-        })
-
-        // Add commands.
-        const existingCommands = this.getCommands()
-        commands.forEach(command => {
-            const conflictingNames = _(existingCommands)
-                .map(c => _.intersection(c.names, command.names))
-                .flatten()
-                .join(', ')
-
-            assert(conflictingNames === '', `Command intersection found in ${name} module. Commands with names "${conflictingNames}" already exist`)
-            this.addCommand(command)
-        })
-
-
-        // Add state of module.
+        _.forOwn(methods, (method, methodName) => this.method(methodName, method))
+        commands.forEach(command => this.addCommand(command))
         this.state[name] = defaultState
 
         // Save module.
