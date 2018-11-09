@@ -120,7 +120,6 @@ const room = haxilium({
 ```
 You just define name of the property and its default value. Other stuff is made behind the scenes. `setPlayerAfk` and `playerAfkChange` are assumed as default method and event names respectively.
 
-
 The next code sample is an example of using `afk` property. We will toggle player's `afk` property when he writes `'afk'` in chat. In this code we use callbacks and methods. If you are not familiar with them you can skip this code snippet.
 
 _Don't use this code in your real project because there is a better solution using [commands](#add-commands)._
@@ -220,6 +219,28 @@ room.on('playerChat', function (player, message) {
 })
 ```
 To see full list of methods visit [this page][Haxball Headless API methods].
+
+
+### Improved `getPlayerList()`
+There are 3 improvements in `getPlayerList()` method:
+1. It will never return player with ID = 0. In other words, it will never return bot object
+2. You can sort players by team by passing array of team IDs as first argument:
+    ```js
+    const teams = this.getPlayerList([1, 2, 0])
+    const red = teams[0]
+    const blue = teams[1]
+    const spect = teams[2]
+    ```
+    Or use ES6 destructuring assignment:
+    ```js
+    const [red, blue, spect] = this.getPlayerList([1, 2, 0])
+    ```
+    In result, `red` will contain only players from red team, `blue` will contain only players from blue team and `spect` will contain only spectators.
+3. You can filter out players by passing filter object as first argument(or second argument if you also want to sort players by team):
+    ```js
+    const admins = this.getPlayerList({ admin: true })
+    const [redAdmins, blueAdmins] = this.getPlayerList([1, 2], { admin: true })
+    ```
 
 
 ### Add commands
