@@ -67,8 +67,11 @@ export default class Haxilium extends DelegatedHaxballRoom {
         })
 
         // Extend player object.
-        _.forOwn(player, (options, propName) =>
-            this._initPlayerProperty(propName, options))
+        module._playerPropertyDetachFunctions = []
+        _.forOwn(player, (options, propName) => {
+            const detachProp = this._initPlayerProperty(propName, options)
+            module._playerPropertyDetachFunctions.push(detachProp)
+        })
 
         // Register module methods.
         _.forOwn(methods, (method, methodName) => {
@@ -107,15 +110,11 @@ export default class Haxilium extends DelegatedHaxballRoom {
         // TODO: Throw an error here.
         if (!module) return
 
-        this._defaultPlayer = _.omit(this._defaultPlayer, _.keys(module.player))
-        const defaultPlayerKeys = _.keys(this._defaultPlayer)
-        this.getPlayerList().concat([this.getPlayer(0)]).forEach(p => {
-            this._players[p.id] = _.pick(this._players[p.id], defaultPlayerKeys)
-        })
-
         delete this.state[moduleName]
-        module._callbackDetachFunctions.map(detach => detach())
-        _.keys(module.methods, methodName => { delete this[methodName] })
+        module._callbackDetachFunctions.forEach(detach => detach())
+        module._playerPropertyDetachFunctions.forEach(detachProp => detachProp())
+
+        _.forOwn(module.methods, (m, methodName) => { delete this[methodName] })
 
         _(module.commands).map('names')
             .flatten()
@@ -327,18 +326,14 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param  {String}   options.methodName Optional. Defines a name of method which will be attached to the room.
      * @param  {String}   options.eventName  Optional. Defines a name of event which will be fired.
      * @param  {Boolean}  options.async      Optional. Default is 'true'. If it is 'true', method will be executed asynchronously.
+     * @return {Function}                    A function which removes 'propName' from all players and removes all methods and events.
      */
     _initPlayerProperty(propName, options) {
         assert(!_.has(this._defaultPlayer, propName),
             `Cannot add additional player property ${propName}. ${propName} is already initialized`)
 
-        // Expand shourcut options.
+        // Expand shourcut options and extend with 'default options.
         options = _.isObject(options) ? options : { default: options }
-
-        // Update default player object to use it in player factory later.
-        this._defaultPlayer[propName] = options.default
-
-        // Extend 'options' with 'default options'.
         _.defaultsDeep(options, {
             set(player, value) {
                 if (_.isEqual(player[propName], value))
@@ -350,7 +345,9 @@ export default class Haxilium extends DelegatedHaxballRoom {
         })
         options.set = options.set.bind(this)
 
-        // Define setter which will be attached to the room.
+        this._defaultPlayer[propName] = options.default
+
+        // Define method which will be attached to the room.
         const methodFn = (id, ...values) => setImmediate(() => {
             let player = this.getPlayer(id)
             if (!player) return
@@ -366,6 +363,15 @@ export default class Haxilium extends DelegatedHaxballRoom {
         })
 
         this.method(options.methodName, methodFn)
+
+        // Return a function which removes just added player's property.
+        return () => {
+            delete this[options.methodName]
+            delete this._defaultPlayer[propName]
+            this.getPlayerList().concat([this.getPlayer(0)]).forEach(p => {
+                delete this._players[p.id][propName]
+            })
+        }
     }
 
     /**
