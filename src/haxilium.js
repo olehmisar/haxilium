@@ -291,16 +291,9 @@ export default class Haxilium extends DelegatedHaxballRoom {
     _initPlayers(config) {
         config.player = config.player || {}
 
-        // Expand shourcut options.
-        config.player = _.mapValues(config.player, optionsOrValue =>
-            _.isObject(optionsOrValue) ? optionsOrValue : { default: optionsOrValue })
-
         // Iterate over each setter and extend room object with it.
         _.toPairs(config.player).forEach(([propName, options]) =>
             this._initPlayerProperty(propName, options))
-
-        // Update default player object to use it in factory later.
-        this._defaultPlayer = _.assign(this._defaultPlayer, _.mapValues(config.player, 'default'))
 
         // Get player roles.
         this._roles = createEnum(config.roles || [])
@@ -325,6 +318,15 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param  {Boolean}  options.async      Optional. Default is 'true'. If it is 'true', method will be executed asynchronously.
      */
     _initPlayerProperty(propName, options) {
+        assert(!_.has(this._defaultPlayer, propName),
+            `Cannot add ${propName} additional player field. ${propName} is already initialized.`)
+
+        // Expand shourcut options.
+        options = _.isObject(options) ? options : { default: options }
+
+        // Update default player object to use it in player factory later.
+        this._defaultPlayer[propName] = options.default
+
         // Extend 'options' with 'default options'.
         _.defaultsDeep(options, {
             set(player, value) {
