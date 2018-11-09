@@ -305,11 +305,8 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
         // Get function which calculates player's role. Or make default one.
         this._getPlayerRole = config.getRole || (p => '')
-        // Get function which filters players when getting them using 'getPlayerList'. Or make default one.
-        this._playerFilter    = config.playerFilter || _.stubTrue
 
         assert(_.isFunction(this._getPlayerRole), "'config.getRole' must be a function")
-        assert(_.isFunction(this._playerFilter),  "'config.playerFilter' must be a function")
     }
 
     /**
@@ -374,6 +371,22 @@ export default class Haxilium extends DelegatedHaxballRoom {
      */
     _playerFactory() {
         return _.cloneDeep(this._defaultPlayer)
+    }
+
+    /**
+     * Player filter which is used in 'getPlayerList()' method.
+     * @param  {Object} player Player who will be filtered or not.
+     * @param  {Object} opts   Filter options. Player must have the
+     *                         same properties as options have to pass the filter.
+     * @return {Boolean}       'true' if player is not filtered, otherwise 'false'.
+     */
+    _playerFilter(player, opts) {
+        if (player.id === 0) return false
+        for (let [key, filterValue] of _.entries(opts)) {
+            if (!_.isEqual(player[key], filterValue))
+                return false
+        }
+        return true
     }
 
     /**
