@@ -302,7 +302,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
         config.player = config.player || {}
 
         // Iterate over each setter and extend room object with it.
-        _.toPairs(config.player).forEach(([propName, options]) =>
+        _.forOwn(config.player, (options, propName) =>
             this._initPlayerProperty(propName, options))
 
         // Get player roles.
