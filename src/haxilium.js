@@ -4,7 +4,7 @@ import deepFreeze from 'deep-freeze-strict'
 import setImmediate from 'set-immediate-shim'
 
 import DelegatedHaxballRoom from './delegated-haxball-room'
-import { isPlayerObject, parseAccessStringWithRoles, asyncify, createEnum } from './utils'
+import { isPlayerObject, parseAccessStringWithRoles, createEnum } from './utils'
 import * as errors from './errors'
 
 
@@ -334,12 +334,11 @@ export default class Haxilium extends DelegatedHaxballRoom {
             },
             methodName: _.camelCase(`set-player-${propName}`),
             eventName: _.camelCase(`player-${propName}-change`),
-            async: true
         })
         options.set = options.set.bind(this)
 
         // Define setter which will be attached to the room.
-        let method = (id, ...values) => {
+        const methodFn = (id, ...values) => setImmediate(() => {
             let player = this.getPlayer(id)
             if (!player) return
 
@@ -351,10 +350,9 @@ export default class Haxilium extends DelegatedHaxballRoom {
                 player = _.cloneDeep(player)
                 this._executeCallbacks(options.eventName, [player])
             }
-        }
+        })
 
-        method = options.async ? asyncify(method) : method
-        this.method(options.methodName, method)
+        this.method(options.methodName, methodFn)
     }
 
     /**
