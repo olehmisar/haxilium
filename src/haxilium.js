@@ -325,7 +325,6 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param  {Function} options.set        Optional. Property setter. First argument is player object, the rest arguments are values to set. If returns 'false' callbacks will not be called.
      * @param  {String}   options.methodName Optional. Defines a name of method which will be attached to the room.
      * @param  {String}   options.eventName  Optional. Defines a name of event which will be fired.
-     * @param  {Boolean}  options.async      Optional. Default is 'true'. If it is 'true', method will be executed asynchronously.
      * @return {Function}                    A function which removes 'propName' from all players and removes all methods and events.
      */
     _initPlayerProperty(propName, options) {
