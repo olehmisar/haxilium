@@ -184,11 +184,11 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     /**
      * Get command object.
-     * @param  {String} commandName Name of the command.
-     * @return {Object}             Command object.
+     * @param  {String} name Name of the command.
+     * @return {Object}      Command object.
      */
-    getCommand(commandName) {
-        return this._commands[commandName]
+    getCommand(name) {
+        return this._commands[name]
     }
 
     /**
