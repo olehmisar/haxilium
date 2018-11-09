@@ -107,7 +107,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
         _(module.commands).map('names')
             .flatten()
-            .forEach(name => { delete this._commands[name] });
+            .forEach(name => { delete this._commands[name] })
 
         delete this._modules[moduleName]
     }
