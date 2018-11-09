@@ -16,6 +16,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
     RED = 1
     BLUE = 2
     _modules = {}
+    _callbacks = {}
     _players = {}
     _commands = {}
     _roles = {}
