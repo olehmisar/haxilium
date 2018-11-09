@@ -314,13 +314,13 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     /**
      * Attach method to the room which sets 'propName' on player and calls callbacks.
-     * @param  {String}   propName           Name of player model property.
-     * @param  {Object}   options            Property options.
-     * @param  {}         options.default    Default value of property.
-     * @param  {Function} options.set        Optional. Property setter. First argument is player object, the rest arguments are values to set. If returns 'false' callbacks will not be called.
-     * @param  {String}   options.methodName Optional. Defines a name of method which will be attached to the room.
-     * @param  {String}   options.eventName  Optional. Defines a name of event which will be fired.
-     * @return {Function}                    A function which removes 'propName' from all players and removes all methods and events.
+     * @param  {String}   propName        Name of player model property.
+     * @param  {Object}   options         Property options.
+     * @param  {}         options.default Default value of property.
+     * @param  {Function} options.set     Optional. Property setter. First argument is player object, the rest arguments are values to set. If returns 'false' callbacks will not be called.
+     * @param  {String}   options.method  Optional. Defines a name of method which will be attached to the room.
+     * @param  {String}   options.event   Optional. Defines a name of event which will be fired.
+     * @return {Function}                 A function which removes 'propName' from all players and removes all methods and events.
      */
     _initPlayerProperty(propName, options) {
         assert(!_.has(this._defaultPlayer, propName),
@@ -334,8 +334,8 @@ export default class Haxilium extends DelegatedHaxballRoom {
                     return false
                 player[propName] = value
             },
-            methodName: _.camelCase(`set-player-${propName}`),
-            eventName: _.camelCase(`player-${propName}-change`),
+            method: _.camelCase(`set-player-${propName}`),
+            event: _.camelCase(`player-${propName}-change`),
         })
         options.set = options.set.bind(this)
 
@@ -352,15 +352,15 @@ export default class Haxilium extends DelegatedHaxballRoom {
             if (setterReturn !== false) {
                 // Send player copy to the callbacks.
                 player = _.cloneDeep(player)
-                this._executeCallbacks(options.eventName, [player])
+                this._executeCallbacks(options.event, [player])
             }
         })
 
-        this.method(options.methodName, methodFn)
+        this.method(options.method, methodFn)
 
         // Return a function which removes just added player's property.
         return () => {
-            delete this[options.methodName]
+            delete this[options.method]
             delete this._defaultPlayer[propName]
             this.getPlayerList().concat([this.getPlayer(0)]).forEach(p => {
                 delete this._players[p.id][propName]
