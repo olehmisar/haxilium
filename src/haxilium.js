@@ -347,7 +347,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
         this._defaultPlayer[propName] = options.default
 
         // Define method which will be attached to the room.
-        const methodFn = (id, ...values) => setImmediate(() => {
+        const methodFn = (id, ...values) => void setImmediate(() => {
             let player = this.getPlayer(id)
             if (!player) return
 
