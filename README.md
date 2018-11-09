@@ -346,15 +346,20 @@ Now, if player types `!help afk` in chat, he will get `'Toggle your afk status'`
 ### Introduction
 Haxilium provides module system. Module is an object which contains following fields: `name`, `defaultState`, `methods`, `callbacks` and `commands`. `name` is required, all other fields are optional. Let's look at module example. The following module includes:
 - `testModule` name
+- `testProperty` additional PlayerObject property
 - `testMessage` state property
 - `sendTestMessage()` method
 - `playerJoin()` callback
-- x2 `playerChat()` callbacks
+- `playerChat()` callbacks x2
 - `!test` command
 
 ```js
 const testModuleObject = {
     name: 'testModule',
+    // Define additional properties of PlayerObject.
+    player: {
+        testProperty: 'testProperty of the player'
+    },
     // Define default state of the module. We will be able to access this state object later.
     defaultState: {
         testMessage: 'This is a test message. Room is working properly'
@@ -386,8 +391,9 @@ const testModuleObject = {
     },
     commands: [{
         names: ['test'],
-        execute() {
+        execute(player) {
             this.sendTestMessage()
+            this.sendChat('Your test property is ' + player.testProperty)
         }
     }]
 }
@@ -400,10 +406,11 @@ room.registerModule(testModuleObject)
 
 Ok, that was a lot of code. Let's analyze it in details.
 1. We define `name` property of the module which is set to `'testModule'`. It is name of the module which we will use later.
-2. The next piece is `defaultState` object. We can see `testMessage` variable in it. Later, we will be able to retrieve this variable using `this.state.testModule.testMessage`.
-3. After `defaultState` we define `methods`. It is an object where __keys__ are __names__ of methods and __values__ are __methods__ themselves. Nothing special.
-4. Then we see `callbacks` object. Like `methods`, __keys__ are __names of events__ and __values__ are __callbacks__ or __arrays of callbacks__.
-5. The last field we have defined is `commands` array. It is array of command objects. Click [here](#add-commands) for detail info about commands.
+2. `player` is an object which defines additional `PlayerObject` properties. [More info](#playerobject-extension).
+3. The next piece is `defaultState` object. We can see `testMessage` variable in it. Later, we will be able to retrieve this variable using `this.state.testModule.testMessage`.
+4. After `defaultState` we define `methods`. It is an object where __keys__ are __names__ of methods and __values__ are __methods__ themselves. Nothing special.
+5. Then we see `callbacks` object. Like `methods`, __keys__ are __names of events__ and __values__ are __callbacks__ or __arrays of callbacks__.
+6. The last field we have defined is `commands` array. It is array of command objects. Click [here](#add-commands) for detail info about commands.
 
 That's all! That is our module! Now, when player join the room he will see `'Type !test to get test message'`. Then, if he wants, he can write `!test` in chat and he will receive `'This is a test message. Room is working properly'` message. Also, we `console.log()` every message players send.
 
@@ -424,10 +431,6 @@ import haxilium from 'haxilium'
 
 const room = haxilium({
     // Room config...
-    player: {
-        // Make afk field for player.
-        afk: false
-    }
 })
 
 // Register callback for command execution.
@@ -440,6 +443,9 @@ room.on('playerChat', function (player, message) {
 // Define afk module.
 const afkModule = {
     name: 'afk',
+    player: {
+        afk: false
+    },
     callbacks: {
         playerAfkChange(player) {
             if (player.afk) this.sendChat(`${player.name} is afk`)
