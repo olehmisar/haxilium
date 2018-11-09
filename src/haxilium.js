@@ -19,6 +19,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
     _players = {}
     _commands = {}
     _roles = {}
+    _defaultPlayer = {}
 
     constructor(config) {
         assert(_.isObject(config), 'Please provide room config')
@@ -298,9 +299,8 @@ export default class Haxilium extends DelegatedHaxballRoom {
         _.toPairs(config.player).forEach(([propName, options]) =>
             this._initPlayerProperty(propName, options))
 
-        // Build player factory to extend default player object.
-        const defaultPlayer = _.mapValues(config.player, options => options.default)
-        this._playerFactory = () => _.cloneDeep(defaultPlayer)
+        // Update default player object to use it in factory later.
+        this._defaultPlayer = _.assign(this._defaultPlayer, _.mapValues(config.player, 'default'))
 
         // Get player roles.
         this._roles = createEnum(config.roles || [])
@@ -354,6 +354,15 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
         this.method(options.methodName, methodFn)
     }
+
+    /**
+     * Make a new player based on default player object.
+     * @return {Object} New player object.
+     */
+    _playerFactory() {
+        return _.cloneDeep(this._defaultPlayer)
+    }
+
 
     /**
      * Delete callbacks which are present and (re)set default callbacks.
