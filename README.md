@@ -43,30 +43,83 @@ The above code will create a __public__ haxball room with "__Haxilium Room__" na
 In addition, Haxilium provides more `RoomConfig` properties:
 - `player: object`
 - `roles: string[]`
-- `getRole(): function`
+- `getRole(player: PlayerObject): function`
 
-More info about `roles` and `getRole()` you can find in [command system section](#player-roles). `player` property is an object where you put additional [`PlayerObject`][Haxball Headless API player object] properties where __key__ is __name__ of property and __value__ is __default value__ of property:
+More info about `roles` and `getRole()` you can find in [command system section](#player-roles). `player` property is an object where you put additional [`PlayerObject`][Haxball Headless API player object] properties where __key__ is __name__ of property and __value__ is __options__ of property:
 ```js
 const room = haxilium({
     roomName: 'Haxilium room',
     player: {
-        afk: false,
-        confirmed: false
+        afk: {
+            // Set default value as 'false'.
+            default: false,
+            // Add 'setPlayerAfk(id, afk)' to the room object.
+            method: 'setPlayerAfk',
+            // Fire a 'playerAfkChange' event when afk status of some player changes.
+            event: 'playerAfkChange',
+            // Define setter. Notice that 'return false'.
+            set(player, afk) {
+                // 'return false' will not fire 'playerAfkChange' event.
+                if (player.afk === afk) return false
+                player.afk = afk
+            }
+        }
     }
 })
 ```
 
-In the above code we see that we've made two additional `PlayerObject` properties with `false` as default value of both:
-- `afk`
-- `confirmed`
+In the above code we see that we've made additional `afk` property for every player. We set `false` as default value for `afk` because we assume that player is not afk by default:
+```js
+default: false
+```
+and we will use it like this:
+```js
+room.on('playerAfkChange', function (player) {
+    console.log(player.name, player.afk)
+})
+```
 
-Two room methods are created automatically:
-- `setPlayerAfk(playerID: int, afk: bool)`
-- `setPlayerConfirmed(playerID: int, confirmed: bool)`
+Then we define name of the method which will be attached to the room object:
+```js
+method: 'setPlayerAfk'
+```
+and we will use it like this:
+```js
+this.setPlayerAfk(1, true)
+```
 
-And two events are created automatically too. Signatures of callbacks for them are:
-- `playerAfkChange(player: PlayerObject)`
-- `playerConfirmedChange(player: playerObject)`
+After that we set event name which will be fired when some player's afk status is changed:
+```js
+event: 'playerAfkChange'
+```
+usage:
+```js
+room.on('playerAfkChange', function (player) {
+    console.log(player.name, player.afk)
+})
+```
+
+Lastly, we define actual setter which sets player property:
+```js
+set(player, afk) {
+    // 'return false' will not fire 'playerAfkChange' event.
+    if (player.afk === afk) return false
+    player.afk = afk
+}
+```
+Notice that `return false` code. We `return false` if afk status of player is the same as we want to set. `return false` means that we don't want to call callbacks. You can omit `return false`. Or you can `return false` based on another condition and callbacks will not be called.
+
+Imagine you have to write 2 or 3 or 10 or even 100 additional player properties. It will be cumbersome to write so much code. That's why Haxilium provides shortcuts. The following snippet is equal to above 9 lines of code:
+```js
+const room = haxilium({
+    roomName: 'Haxilium room',
+    player: {
+        afk: false
+    }
+})
+```
+You just define name of the property and its default value. Other stuff is made behind the scenes. `setPlayerAfk` and `playerAfkChange` are assumed as default method and event names respectively.
+
 
 The next code sample is an example of using `afk` property. We will toggle player's `afk` property when he writes `'afk'` in chat. In this code we use callbacks and methods. If you are not familiar with them you can skip this code snippet.
 
