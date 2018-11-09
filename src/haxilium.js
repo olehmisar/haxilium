@@ -45,14 +45,15 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param {Object[]} module.commands     An array of commands to register.
      */
     registerModule(module) {
-        const { name, defaultState = {}, methods = {}, callbacks = {}, commands = [] } = module
-        module = { name, defaultState, methods, callbacks, commands }
+        const { name, player = {}, defaultState = {}, methods = {}, callbacks = {}, commands = [] } = module
+        module = { name, player, defaultState, methods, callbacks, commands }
 
         // Validate module.
         assert(_.isString(name) && name.trim() !== '',
                                          `Module 'name' must be a string but ${typeof name} given`)
         assert(_.isUndefined(this._modules[name]),
-                                         `Module with ${name} 'name' already exists`)
+                                         `Module with ${name} name already exists`)
+        assert(_.isObject(player),       `Module 'player' must be an object but ${typeof player} given`)
         assert(_.isObject(defaultState), `Module 'defaultState' must be an object but ${typeof defaultState} given`)
         assert(_.isObject(methods),      `Module 'methods' must be an object of functions but ${typeof methods} given`)
         assert(_.isObject(callbacks),    `Module 'callbacks' must be an object of functions but ${typeof callbacks} given`)
@@ -64,6 +65,10 @@ export default class Haxilium extends DelegatedHaxballRoom {
             const detach = this.on(eventName, callback)
             module._callbackDetachFunctions.push(detach)
         })
+
+        // Extend player object.
+        _.forOwn(player, (options, propName) =>
+            this._initPlayerProperty(propName, options))
 
         // Register module methods.
         _.forOwn(methods, (method, methodName) => {
@@ -101,6 +106,12 @@ export default class Haxilium extends DelegatedHaxballRoom {
         const module = this._modules[moduleName]
         // TODO: Throw an error here.
         if (!module) return
+
+        this._defaultPlayer = _.omit(this._defaultPlayer, _.keys(module.player))
+        const defaultPlayerKeys = _.keys(this._defaultPlayer)
+        this.getPlayerList().concat([this.getPlayer(0)]).forEach(p => {
+            this._players[p.id] = _.pick(this._players[p.id], defaultPlayerKeys)
+        })
 
         delete this.state[moduleName]
         module._callbackDetachFunctions.map(detach => detach())
@@ -319,7 +330,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
      */
     _initPlayerProperty(propName, options) {
         assert(!_.has(this._defaultPlayer, propName),
-            `Cannot add ${propName} additional player field. ${propName} is already initialized.`)
+            `Cannot add additional player property ${propName}. ${propName} is already initialized`)
 
         // Expand shourcut options.
         options = _.isObject(options) ? options : { default: options }
@@ -364,7 +375,6 @@ export default class Haxilium extends DelegatedHaxballRoom {
     _playerFactory() {
         return _.cloneDeep(this._defaultPlayer)
     }
-
 
     /**
      * Delete callbacks which are present and (re)set default callbacks.
