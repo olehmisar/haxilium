@@ -52,20 +52,25 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param {Object[]} module.commands     An array of commands to register.
      */
     _registerModule(module) {
+        if (this._modules[module.name]) return
+
+        // Fill optional fields with values.
         module = _.defaultsDeep(_.cloneDeep(module), {
             player: {},
             defaultState: {},
             methods: {},
             callbacks: {},
-            commands: []
+            commands: [],
+            dependencies: []
         })
-        const { name, player, defaultState, methods, callbacks, commands } = module
+        const { name, player, defaultState, methods, callbacks, commands, dependencies } = module
+
+        // First things first, register dependencies
+        dependencies.forEach(dep => this._registerModule(dep))
 
         // Validate module.
         assert(_.isString(name) && name.trim() !== '',
                                          `Module 'name' must be a string but ${typeof name} given`)
-        assert(_.isUndefined(this._modules[name]),
-                                         `Module with ${name} name already exists`)
 
         assert(_.isObject(player),       `Module 'player' must be an object but ${typeof player} given`)
         assert(_.isObject(defaultState), `Module 'defaultState' must be an object but ${typeof defaultState} given`)
