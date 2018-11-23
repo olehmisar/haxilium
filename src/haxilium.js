@@ -51,6 +51,8 @@ export default class Haxilium extends DelegatedHaxballRoom {
      *                                       object are names of events and values are callback functions
      *                                       or arrays of callback functions.
      * @param {Object[]} module.commands     An array of commands to register.
+     * @param {Function} module.registered   A function which will be called when module is
+     *                                       registered successfully.
      */
     _registerModule(module) {
         if (this._modules[module.name]) return
@@ -62,7 +64,8 @@ export default class Haxilium extends DelegatedHaxballRoom {
             methods: {},
             callbacks: {},
             commands: [],
-            dependencies: []
+            dependencies: [],
+            registered: _.noop,
         })
         const { name, player, defaultState, methods, callbacks, commands, dependencies } = module
 
@@ -101,6 +104,9 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
         // Save module.
         this._modules[name] = module
+
+        // Call 'registered' hook.
+        module.registered.call(this)
     }
 
     /**
