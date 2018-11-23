@@ -114,10 +114,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
         this._callbacks[eventName] = (this._callbacks[eventName] || []).concat(callbacks)
 
         // Return detaching function.
-        return () => {
-            this._callbacks[eventName] = this._callbacks[eventName]
-                .filter(cb => !callbacks.includes(cb))
-        }
+        return () => void _.pullAll(this._callbacks[eventName], callbacks)
     }
 
     /**
