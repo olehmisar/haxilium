@@ -1,6 +1,6 @@
 {
   "name": "haxilium",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Haxball Headless API Framework for easy and organized development.",
   "main": "dist/bundle.js",
   "scripts": {
