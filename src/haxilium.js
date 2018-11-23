@@ -39,6 +39,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * Register room module.
      * @param {Object}   module              Module object.
      * @param {String}   module.name         An unique string module identificator(name).
+     * @param {Object}   module.player       An object of custom player's properties.
      * @param {Object}   module.defaultState An object where you put all module related variables. This
      *                                       object will be recursively merged with 'defaultState's of
      *                                       other modules and will be set as 'state' property of the room.
