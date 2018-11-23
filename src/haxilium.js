@@ -25,9 +25,13 @@ export default class Haxilium extends DelegatedHaxballRoom {
     constructor(config) {
         assert(_.isObject(config), 'Please provide room config')
         super(config)
+
         this.state = config.state || {}
         this._initPlayers(config)
         this._resetCallbacks()
+        if (config.modules) {
+            config.modules.forEach(module => this._registerModule(module))
+        }
     }
 
     /**
@@ -45,9 +49,15 @@ export default class Haxilium extends DelegatedHaxballRoom {
      *                                       or arrays of callback functions.
      * @param {Object[]} module.commands     An array of commands to register.
      */
-    registerModule(module) {
-        const { name, player = {}, defaultState = {}, methods = {}, callbacks = {}, commands = [] } = module
-        module = { name, player, defaultState, methods, callbacks, commands }
+    _registerModule(module) {
+        module = _.defaultsDeep(_.cloneDeep(module), {
+            player: {},
+            defaultState: {},
+            methods: {},
+            callbacks: {},
+            commands: []
+        })
+        const { name, player, defaultState, methods, callbacks, commands } = module
 
         // Validate module.
         assert(_.isString(name) && name.trim() !== '',
@@ -74,48 +84,15 @@ export default class Haxilium extends DelegatedHaxballRoom {
             assert(conflictingNames === '', `Command intersection found in ${name} module. Commands with names "${conflictingNames}" already exist`)
         })
 
-        // Register module callbacks.
-        module._callbackDetachFunctions = []
-        _.forOwn(callbacks, (callback, eventName) => {
-            const detach = this.on(eventName, callback)
-            module._callbackDetachFunctions.push(detach)
-        })
-
-        // Extend player object.
-        module._playerPropertyDetachFunctions = []
-        _.forOwn(player, (options, propName) => {
-            const detachProp = this._initPlayerProperty(propName, options)
-            module._playerPropertyDetachFunctions.push(detachProp)
-        })
-
-        _.forOwn(methods, (method, methodName) => this.method(methodName, method))
-        commands.forEach(command => this.addCommand(command))
+        // Register module.
+        _.forOwn (callbacks, (callback, eventName) => this.on(eventName, callback))
+        _.forOwn (player,    (options, propName)   => this._initPlayerProperty(propName, options))
+        _.forOwn (methods,   (method, methodName)  => this.method(methodName, method))
+        _.forEach(commands,  (command)             => this.addCommand(command))
         this.state[name] = defaultState
 
         // Save module.
         this._modules[name] = module
-    }
-
-    /**
-     * Deregister room module.
-     * @param {String} moduleName Name of the module which will be deregistered.
-     */
-    deregisterModule(moduleName) {
-        const module = this._modules[moduleName]
-        // TODO: Throw an error here.
-        if (!module) return
-
-        delete this.state[moduleName]
-        module._callbackDetachFunctions.forEach(detach => detach())
-        module._playerPropertyDetachFunctions.forEach(detachProp => detachProp())
-
-        _.forOwn(module.methods, (m, methodName) => { delete this[methodName] })
-
-        _(module.commands).map('names')
-            .flatten()
-            .forEach(name => { delete this._commands[name] })
-
-        delete this._modules[moduleName]
     }
 
     /**
@@ -317,7 +294,6 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param  {Function} options.set     Optional. Property setter. First argument is player object, the rest arguments are values to set. If returns 'false' callbacks will not be called.
      * @param  {String}   options.method  Optional. Defines a name of method which will be attached to the room.
      * @param  {String}   options.event   Optional. Defines a name of event which will be fired.
-     * @return {Function}                 A function which removes 'propName' from all players and removes all methods and events.
      */
     _initPlayerProperty(propName, options) {
         assert(!_.has(this._defaultPlayer, propName),
@@ -354,15 +330,6 @@ export default class Haxilium extends DelegatedHaxballRoom {
         })
 
         this.method(options.method, methodFn)
-
-        // Return a function which removes just added player's property.
-        return () => {
-            delete this[options.method]
-            delete this._defaultPlayer[propName]
-            this.getPlayerList().concat([this.getPlayer(0)]).forEach(p => {
-                delete this._players[p.id][propName]
-            })
-        }
     }
 
     /**
