@@ -24,6 +24,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
     constructor(config) {
         assert(_.isObject(config), 'Please provide room config')
+        config = _.cloneDeep(config)
         super(config)
 
         this.state = config.state || {}
