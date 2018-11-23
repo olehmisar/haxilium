@@ -365,8 +365,19 @@ Now, if player types `!help afk` in chat, he will get `'Toggle your afk status'`
 ## Module system
 
 ### Introduction
-Haxilium provides module system. Module is an object which contains following fields: `name`, `defaultState`, `methods`, `callbacks` and `commands`. `name` is required, all other fields are optional. Let's look at module example. The following module includes:
+Haxilium provides module system. Module is an object which contains following fields:
+- `name` - unique name of the module
+- `player` - an object containing custom player's properties. [More info](#playerobject-extension)
+- `defaultState` - a module state object. Put all module related variables here. Later you will be able to get those variables using `this.state.moduleName.variable`
+- `methods` - an object that contains custom methods. __key__ is __name__ of the method and __value__ is __method itself__. [More info](#create-methods)
+- `callbacks` - an object of callbacks or arrays of callbacks. __key__ is __event__ and __value__ is __callback function__ or __array of callback functions__. [More info](#attach-callbacks)
+- `commands` - an array of commands. [More info about commands](#add-commands)
+- `registered` - function which will be called when module is registered successfully
+- `dependencies` - an array of modules on which this module depends on
+
+`name` is required, all other fields are optional. Let's look at module example. The following module includes:
 - `testModule` name
+- `registered` function
 - `testProperty` additional PlayerObject property
 - `testMessage` state property
 - `sendTestMessage()` method
@@ -375,8 +386,11 @@ Haxilium provides module system. Module is an object which contains following fi
 - `!test` command
 
 ```js
-const testModuleObject = {
+const testModule = {
     name: 'testModule',
+    registered() {
+        console.log('testModule is ready!')
+    },
     // Define additional properties of PlayerObject.
     player: {
         testProperty: 'testProperty of the player'
@@ -420,29 +434,24 @@ const testModuleObject = {
 }
 ```
 
-Now we have to register that module:
+Now we pass `modules` array to the room config:
 ```js
-room.registerModule(testModuleObject)
+const room = haxilium({
+    roomName: 'Haxilium Room',
+    modules: [testModule]
+})
 ```
 
 Ok, that was a lot of code. Let's analyze it in details.
 1. We define `name` property of the module which is set to `'testModule'`. It is name of the module which we will use later.
-2. `player` is an object which defines additional `PlayerObject` properties. [More info](#playerobject-extension).
-3. The next piece is `defaultState` object. We can see `testMessage` variable in it. Later, we will be able to retrieve this variable using `this.state.testModule.testMessage`.
-4. After `defaultState` we define `methods`. It is an object where __keys__ are __names__ of methods and __values__ are __methods__ themselves. Nothing special.
-5. Then we see `callbacks` object. Like `methods`, __keys__ are __names of events__ and __values__ are __callbacks__ or __arrays of callbacks__.
-6. The last field we have defined is `commands` array. It is array of command objects. Click [here](#add-commands) for detail info about commands.
+2. `registered` lifecycle hook is a function which will be called when module is registered.
+3. `player` is an object which defines additional `PlayerObject` properties. [More info](#playerobject-extension).
+4. The next piece is `defaultState` object. We can see `testMessage` variable in it. Later, we will be able to retrieve this variable using `this.state.testModule.testMessage`.
+5. After `defaultState` we define `methods`. It is an object where __keys__ are __names__ of methods and __values__ are __methods__ themselves. Nothing special.
+6. Then we see `callbacks` object. Like `methods`, __keys__ are __names of events__ and __values__ are __callbacks__ or __arrays of callbacks__.
+7. The last field we have defined is `commands` array. It is array of command objects. Click [here](#add-commands) for detail info about commands.
 
 That's all! That is our module! Now, when player join the room he will see `'Type !test to get test message'`. Then, if he wants, he can write `!test` in chat and he will receive `'This is a test message. Room is working properly'` message. Also, we `console.log()` every message players send.
-
-Also, if we don't need this `testModule` anymore, we can deregister it by its name:
-```js
-room.deregisterModule(testModuleObject.name)
-```
-or
-```js
-room.deregisterModule('testModule')
-```
 
 
 ### Afk module example
@@ -450,16 +459,6 @@ Below you can see example of afk system module:
 ```js
 import haxilium from 'haxilium'
 
-const room = haxilium({
-    // Room config...
-})
-
-// Register callback for command execution.
-room.on('playerChat', function (player, message) {
-    if (message[0] === '!') {
-        this.executeCommand(message.substr(1))
-    }
-})
 
 // Define afk module.
 const afkModule = {
@@ -488,8 +487,18 @@ const afkModule = {
     }]
 }
 
-// Register afk module.
-room.registerModule(afkModule)
+// Create room and register modules.
+const room = haxilium({
+    roomName: 'Haxilium room',
+    modules: [afkModule]
+})
+
+// Register callback for command execution.
+room.on('playerChat', function (player, message) {
+    if (message[0] === '!') {
+        this.executeCommand(message.substr(1))
+    }
+})
 ```
 
 Module is registered! Now players can use two (or three) commands: `!afk` and `!afklist` (or `!afks`).
