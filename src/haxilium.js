@@ -401,8 +401,13 @@ export default class Haxilium extends DelegatedHaxballRoom {
         const callbacks = this._callbacks[eventName]
         if (!callbacks) return
 
-        // Freeze args to prevent changes in them.
-        deepFreeze(callbackArgs)
+        // Save indeces of players to update them between callbacks
+        // and freeze args to prevent changes in them.
+        const playerIndeces = []
+        for (let i = 0; i < callbackArgs.length; i++) {
+            if (isPlayerObject(callbackArgs[i])) playerIndeces.push(i)
+            deepFreeze(callbackArgs[i])
+        }
 
         // Store all results of calls of callbacks.
         const cbReturns = []
@@ -412,6 +417,13 @@ export default class Haxilium extends DelegatedHaxballRoom {
                 cbReturns.push(callbacks[i](...callbackArgs))
             } catch (err) {
                 console.error(err)
+            }
+
+            // Update player objects BETWEEN callbacks.
+            if (i !== callbacks.length - 1) {
+                for (let index of playerIndeces) {
+                    callbackArgs[index] = deepFreeze(this.getPlayer(callbackArgs[index].id))
+                }
             }
         }
         // If some callback has returned 'false' then return false
