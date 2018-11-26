@@ -4,7 +4,7 @@ import deepFreeze from 'deep-freeze-strict'
 import setImmediate from 'set-immediate-shim'
 
 import DelegatedHaxballRoom from './delegated-haxball-room'
-import { isPlayerObject, parseAccessStringWithRoles, createEnum } from './utils'
+import { isPlayerObject, parseAccessStringWithRoles, createEnum, asyncify } from './utils'
 import * as errors from './errors'
 
 
@@ -312,9 +312,14 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param  {String}   propName        Name of player model property.
      * @param  {Object}   options         Property options.
      * @param  {}         options.default Default value of property.
-     * @param  {Function} options.set     Optional. Property setter. First argument is player object, the rest arguments are values to set. If returns 'false' callbacks will not be called.
+     * @param  {Function} options.set     Optional. Property setter. First argument is player object, the rest arguments
+     *                                    are values to set. If returns 'false' callbacks will not be called.
      * @param  {String}   options.method  Optional. Defines a name of method which will be attached to the room.
      * @param  {String}   options.event   Optional. Defines a name of event which will be fired.
+     * @param  {Boolean}  options.async   Optional, default 'true'. Determines is 'options.method'
+     *                                    called asynchronously or not.
+     *                                    Recommended value: 'true'. Use 'false' only if you need to modify player object
+     *                                    in callback and let other callbacks see that changes. For example for 'player.captain' property.
      */
     _initPlayerProperty(propName, options) {
         assert(!(propName in this._defaultPlayer),
@@ -330,13 +335,14 @@ export default class Haxilium extends DelegatedHaxballRoom {
             },
             method: _.camelCase(`set-player-${propName}`),
             event: _.camelCase(`player-${propName}-change`),
+            async: true
         })
         options.set = options.set.bind(this)
 
         this._defaultPlayer[propName] = options.default
 
         // Define method which will be attached to the room.
-        const methodFn = (id, ...values) => void setImmediate(() => {
+        let methodFn = (id, ...values) => {
             let player = this.getPlayer(id)
             if (!player) return
 
@@ -348,8 +354,9 @@ export default class Haxilium extends DelegatedHaxballRoom {
                 player = _.cloneDeep(player)
                 this._executeCallbacks(options.event, [player])
             }
-        })
+        }
 
+        if (options.async) methodFn = asyncify(methodFn)
         this.method(options.method, methodFn)
     }
 
