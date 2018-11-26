@@ -317,7 +317,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @param  {String}   options.event   Optional. Defines a name of event which will be fired.
      */
     _initPlayerProperty(propName, options) {
-        assert(!_.has(this._defaultPlayer, propName),
+        assert(!(propName in this._defaultPlayer),
             `Cannot add additional player property ${propName}. ${propName} is already initialized`)
 
         // Expand shourcut options and extend with 'default options.
