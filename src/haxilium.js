@@ -55,6 +55,8 @@ export default class Haxilium extends DelegatedHaxballRoom {
      *                                       registered successfully.
      */
     _registerModule(module) {
+        assert(_.isObject(module), `Module must be an object but ${typeof module} given`)
+
         if (this._modules[module.name]) return
 
         // Fill optional fields with values.
