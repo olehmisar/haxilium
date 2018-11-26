@@ -69,12 +69,12 @@ export default class Haxilium extends DelegatedHaxballRoom {
         })
         const { name, player, defaultState, methods, callbacks, commands, dependencies } = module
 
-        // First things first, register dependencies
-        dependencies.forEach(dep => this._registerModule(dep))
-
         // Validate module.
         assert(_.isString(name) && name.trim() !== '',
                                          `Module 'name' must be a string but ${typeof name} given`)
+
+        assert(_.isArray(dependencies) && dependencies.every(_.isObject),
+                                         `Module 'dependencies' must be an array of modules`)
 
         assert(_.isObject(player),       `Module 'player' must be an object but ${typeof player} given`)
         assert(_.isObject(defaultState), `Module 'defaultState' must be an object but ${typeof defaultState} given`)
@@ -96,6 +96,11 @@ export default class Haxilium extends DelegatedHaxballRoom {
         })
 
         assert(_.isFunction(module.registered), `Module 'registered' must be a function but ${typeof module.registered} given`)
+
+
+        // First things first, register dependencies.
+        dependencies.forEach(dep => this._registerModule(dep))
+
 
         // Register module.
         _.forOwn (callbacks, (callback, eventName) => this.on(eventName, callback))
