@@ -247,12 +247,13 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * Get player list with smart options.
      * @param  {Number[]} teamsOrder                Determines in which order will be teams sorted. Optional.
      * @param  {Object}   opts                      Options which will be passed to 'filter' method of player model. Optional.
-     * @return {(PlayerObject[]|PlayerObject[][])}  If 'teamsOrder' is empty array than no sorting by team will be made and just array of 'PlayerObject's will be returned. Otherwise, the return value will be array of teams.
+     * @return {(PlayerObject[]|PlayerObject[][])}  If 'teamsOrder' is 'undefined' than no sorting by team will be made and just
+     *                                              array of 'PlayerObject's will be returned. Otherwise, the return value will be array of teams.
      */
-    getPlayerList(teamsOrder = [], opts = {}) {
+    getPlayerList(teamsOrder, opts = {}) {
         if (!_.isArray(teamsOrder)) {
             opts = teamsOrder
-            teamsOrder = []
+            teamsOrder = undefined
         }
 
         const players = []
@@ -262,7 +263,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
         }
 
         // Return just array of players.
-        if (teamsOrder.length === 0) return players
+        if (_.isUndefined(teamsOrder)) return players
 
         // Return array of teams.
         const teams = [[], [], []]
