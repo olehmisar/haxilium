@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import setImmediate from 'set-immediate-shim'
 
 
 /**
@@ -32,12 +33,16 @@ export default class DelegatedHaxballRoom {
             this._room = window.HBInit(config)
             this._delegateMethods()
             this._delegateCallbacks()
+
+            // Remove callback to prevent second initialization.
+            window.onHBLoaded = _.noop
         }
 
+        // If room initialization function is loaded, initialize room.
         if (window.HBInit) {
-            window.onHBLoaded()
-            // Remove callback to prevent second initialization.
-            window.onHBLoaded = () => {}
+            // Initialize asynchronously because room must be initialized
+            // asynchronously by definition with or without 'onHBLoaded'.
+            setImmediate(window.onHBLoaded)
         }
     }
 
