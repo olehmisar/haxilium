@@ -95,6 +95,8 @@ export default class Haxilium extends DelegatedHaxballRoom {
             assert(conflictingNames === '', `Command intersection found in ${name} module. Commands with names "${conflictingNames}" already exist`)
         })
 
+        assert(_.isFunction(module.registered), `Module 'registered' must be a function but ${typeof module.registered} given`)
+
         // Register module.
         _.forOwn (callbacks, (callback, eventName) => this.on(eventName, callback))
         _.forOwn (player,    (options, propName)   => this._initPlayerProperty(propName, options))
