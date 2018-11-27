@@ -344,15 +344,13 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
         // Define method which will be attached to the room.
         let methodFn = (id, ...values) => {
-            let player = this.getPlayer(id)
+            let player = { ...this.getPlayer(id), ...this._players[id] }
             if (!player) return
 
             // Set and save player's properties.
             const setterReturn = options.set(player, ...values)
             this._players[id] = player
             if (setterReturn !== false) {
-                // Send player copy to the callbacks.
-                player = _.cloneDeep(player)
                 this._executeCallbacks(options.event, [player])
             }
         }
@@ -409,29 +407,22 @@ export default class Haxilium extends DelegatedHaxballRoom {
         const callbacks = this._callbacks[eventName]
         if (!callbacks) return
 
-        // Save indeces of players to update them between callbacks
-        // and freeze args to prevent changes in them.
-        const playerIndeces = []
-        for (let i = 0; i < callbackArgs.length; i++) {
-            if (isPlayerObject(callbackArgs[i])) playerIndeces.push(i)
-            deepFreeze(callbackArgs[i])
-        }
-
         // Store all results of calls of callbacks.
         const cbReturns = []
         for (let i = 0; i < callbacks.length; i++) {
-            try {
-                // Execute callback and push result to all results.
-                cbReturns.push(callbacks[i](...callbackArgs))
-            } catch (err) {
-                console.error(err)
+            const clonedArgs = []
+            for (let arg of callbackArgs) {
+                clonedArgs.push(isPlayerObject(arg)
+                    ? this.getPlayer(arg.id)
+                    : _.cloneDeep(arg)
+                )
             }
 
-            // Update player objects BETWEEN callbacks.
-            if (i !== callbacks.length - 1) {
-                for (let index of playerIndeces) {
-                    callbackArgs[index] = deepFreeze(this.getPlayer(callbackArgs[index].id))
-                }
+            try {
+                // Execute callback and push result to all results.
+                cbReturns.push(callbacks[i](...clonedArgs))
+            } catch (err) {
+                console.error(err)
             }
         }
         // If some callback has returned 'false' then return false
@@ -462,7 +453,11 @@ export default class Haxilium extends DelegatedHaxballRoom {
         // If player's additional properties don't exist yet, create them.
         if (!this._players[rawPlayer.id])
             this._players[rawPlayer.id] = this._playerFactory()
+
         // Merge player and additional properties.
-        return { ...this._players[rawPlayer.id], ...rawPlayer }
+        return _.cloneDeep({
+            ...this._players[rawPlayer.id],
+            ...rawPlayer
+        })
     }
 }
