@@ -284,7 +284,8 @@ export default class Haxilium extends DelegatedHaxballRoom {
      * @return {PlayerObject}    Extended player object.
      */
     getPlayer(id) {
-        return this._wrapPlayer(super.getPlayer(id))
+        const player = super.getPlayer(id)
+        return player === null ? null : this._wrapPlayer(player)
     }
 
     /**
