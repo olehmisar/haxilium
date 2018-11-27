@@ -391,6 +391,11 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
         this.on('room-link', () => this._executeCallbacks('ready'))
 
+        this.on('playerJoin', player => {
+            this._players[player.id].auth = player.auth
+            this._players[player.id].conn = player.conn
+        })
+
         this.on('playerLeave', player => setImmediate(() => {
             delete this._players[player.id]
         }))
@@ -448,14 +453,14 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
         // Merge player and additional properties.
         return _.cloneDeep({
+            auth: rawPlayer.auth,
+            conn: rawPlayer.conn,
             ...this._players[rawPlayer.id],
             id: rawPlayer.id,
             name: rawPlayer.name,
             team: rawPlayer.team,
             admin: rawPlayer.admin,
             position: rawPlayer.position,
-            auth: rawPlayer.auth,
-            conn: rawPlayer.conn,
         })
     }
 }
