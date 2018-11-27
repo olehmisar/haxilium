@@ -410,17 +410,9 @@ export default class Haxilium extends DelegatedHaxballRoom {
         // Store all results of calls of callbacks.
         const cbReturns = []
         for (let i = 0; i < callbacks.length; i++) {
-            const clonedArgs = []
-            for (let arg of callbackArgs) {
-                clonedArgs.push(isPlayerObject(arg)
-                    ? this.getPlayer(arg.id)
-                    : _.cloneDeep(arg)
-                )
-            }
-
             try {
                 // Execute callback and push result to all results.
-                cbReturns.push(callbacks[i](...clonedArgs))
+                cbReturns.push(callbacks[i](...this._wrapArguments(callbackArgs)))
             } catch (err) {
                 console.error(err)
             }
@@ -438,7 +430,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
     _wrapArguments(args) {
         const newArgs = []
         for (let arg of args) {
-            const newArg = isPlayerObject(arg) ? this._wrapPlayer(arg) : arg
+            const newArg = isPlayerObject(arg) ? this._wrapPlayer(arg) : _.cloneDeep(arg)
             newArgs.push(newArg)
         }
         return newArgs
@@ -457,7 +449,13 @@ export default class Haxilium extends DelegatedHaxballRoom {
         // Merge player and additional properties.
         return _.cloneDeep({
             ...this._players[rawPlayer.id],
-            ...rawPlayer
+            id: rawPlayer.id,
+            name: rawPlayer.name,
+            team: rawPlayer.team,
+            admin: rawPlayer.admin,
+            position: rawPlayer.position,
+            auth: rawPlayer.auth,
+            conn: rawPlayer.conn,
         })
     }
 }

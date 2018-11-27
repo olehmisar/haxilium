@@ -56,7 +56,7 @@ export default class DelegatedHaxballRoom {
             const callbackName = rawCallbackName.substr(2)
             // Assign a function to an original room object.
             this._room[rawCallbackName] = (...args) => {
-                return this._executeCallbacks(callbackName, this._wrapArguments(args))
+                return this._executeCallbacks(callbackName, args)
             }
         })
     }
