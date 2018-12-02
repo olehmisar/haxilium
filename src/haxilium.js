@@ -326,7 +326,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
         assert(!(propName in this._defaultPlayer),
             `Cannot add additional player property ${propName}. ${propName} is already initialized`)
 
-        // Expand shourcut options and extend with 'default options.
+        // Expand shourcut options and extend with 'default options'.
         options = _.isObject(options) ? options : { default: options }
         _.defaultsDeep(options, {
             set(player, value) {
@@ -342,21 +342,22 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
         this._defaultPlayer[propName] = options.default
 
-        // Define method which will be attached to the room.
-        let methodFn = (id, ...values) => {
-            let player = { ...this.getPlayer(id), ...this._players[id] }
-            if (!player) return
+        if (options.method) {
+           // Define method which will be attached to the room.
+            const methodFn = (id, ...values) => {
+                let player = { ...this.getPlayer(id), ...this._players[id] }
+                if (!player) return
 
-            // Set and save player's properties.
-            const setterReturn = options.set(player, ...values)
-            this._players[id] = player
-            if (setterReturn !== false) {
-                this._executeCallbacks(options.event, [player])
+                // Set and save player's properties.
+                const setterReturn = options.set(player, ...values)
+                this._players[id] = player
+                if (options.event && setterReturn !== false) {
+                    this._executeCallbacks(options.event, [player])
+                }
             }
-        }
 
-        if (options.async) methodFn = asyncify(methodFn)
-        this.method(options.method, methodFn)
+            this.method(options.method, options.async ? asyncify(methodFn) : methodFn)
+       }
     }
 
     /**
