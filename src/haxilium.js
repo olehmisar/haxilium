@@ -345,12 +345,13 @@ export default class Haxilium extends DelegatedHaxballRoom {
         if (options.method) {
            // Define method which will be attached to the room.
             const methodFn = (id, ...values) => {
-                let player = { ...this.getPlayer(id), ...this._players[id] }
+                let player = this.getPlayer(id)
                 if (!player) return
 
                 // Set and save player's properties.
                 const setterReturn = options.set(player, ...values)
-                this._players[id] = player
+                this._players[id][propName] = player[propName]
+
                 if (options.event && setterReturn !== false) {
                     this._executeCallbacks(options.event, [player])
                 }
@@ -454,14 +455,8 @@ export default class Haxilium extends DelegatedHaxballRoom {
 
         // Merge player and additional properties.
         return _.cloneDeep({
-            auth: rawPlayer.auth,
-            conn: rawPlayer.conn,
             ...this._players[rawPlayer.id],
-            id: rawPlayer.id,
-            name: rawPlayer.name,
-            team: rawPlayer.team,
-            admin: rawPlayer.admin,
-            position: rawPlayer.position,
+            ...rawPlayer
         })
     }
 }
