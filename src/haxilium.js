@@ -353,7 +353,7 @@ export default class Haxilium extends DelegatedHaxballRoom {
                 this._players[id][propName] = player[propName]
 
                 if (options.event && setterReturn !== false) {
-                    this._executeCallbacks(options.event, [player])
+                    this._executeCallbacks(options.event, [this.getPlayer(id)])
                 }
             }
 
