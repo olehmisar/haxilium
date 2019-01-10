@@ -32,6 +32,8 @@ export abstract class DelegatedRoom {
     }
 
     private extendNativeCallback(event: string) {
+        this.room[event] = (...args: any[]) => this.executeCallbacks(event, this.prepareCallbackArguments(args))
+
         Object.defineProperty(this, event, {
             set(this: DelegatedRoom, callback) {
                 this.room[event] = (...args: any[]): any => {
