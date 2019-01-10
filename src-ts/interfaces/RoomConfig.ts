@@ -1,3 +1,6 @@
+import { Module } from '../models/Module';
+
+
 export interface RoomConfig {
     roomName?: string
     playerName?: string
@@ -9,5 +12,6 @@ export interface RoomConfig {
         lat?: number,
         lon?: number
     }
-    token?: string
+    token?: string,
+    modules?: { new(...args: any[]): Module }[],
 }
