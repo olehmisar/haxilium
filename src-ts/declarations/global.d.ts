@@ -5,6 +5,13 @@ import { Vector } from '../interfaces/Vector';
 import { Player } from '../models/Player';
 
 
+declare global {
+    interface Window {
+        HBInit: typeof HBInit
+        onHBLoaded(): void
+    }
+}
+
 declare class HBInit {
     constructor(config: RoomConfig)
 
