@@ -1,9 +1,11 @@
+import deepFreeze from 'deep-freeze';
 import { NativePlayer } from './interfaces/NativePlayer';
 import { RoomConfig } from './interfaces/RoomConfig';
 import { Scores } from './interfaces/Scores';
 import { TeamID } from './interfaces/TeamID';
 import { Vector } from './interfaces/Vector';
 import { Player } from './models/Player';
+import { isPlayerObject } from './utils';
 
 
 export abstract class DelegatedRoom {
@@ -12,7 +14,13 @@ export abstract class DelegatedRoom {
 
     constructor(config: RoomConfig) {
         this.room = window.HBInit(config)
+        const events = Object.keys(this).filter(key => key.startsWith('on') && key[2] === key[2].toUpperCase())
+        for (const event of events) {
+            this.extendNativeCallback(event)
+        }
     }
+
+    protected abstract executeCallbacks(event: string, args: any[]): void
 
     protected playerFilter(player: Player, opts: object) {
         if (player.id === 0) return false
@@ -23,10 +31,58 @@ export abstract class DelegatedRoom {
         return true
     }
 
+    private extendNativeCallback(event: string) {
+        Object.defineProperty(this, event, {
+            set(this: DelegatedRoom, callback) {
+                this.room[event] = (...args: any[]): any => {
+                    callback.apply(this, args)
+                    this.executeCallbacks(event, this.prepareCallbackArguments(args))
+                }
+            },
+            get() { return this.room[event] },
+            enumerable: true,
+            configurable: true
+        })
+    }
+
+    private prepareCallbackArguments(args: any[]): any[] {
+        const newArgs = []
+        for (let arg of args) {
+            arg = isPlayerObject(arg)
+                ? this.wrapPlayer(arg)
+                : deepFreeze(arg)
+
+            newArgs.push(arg)
+        }
+        return newArgs
+    }
+
     private wrapPlayer(p: NativePlayer): Player {
         const player = this.players[p.id] || (this.players[p.id] = new Player(p))
         return Object.assign(player, p)
     }
+
+    /*
+    * Original callbacks
+    */
+
+    onPlayerJoin?: (player: Player) => void = undefined
+    onPlayerLeave?: (player: Player) => void = undefined
+    onTeamVictory?: (scores: Scores) => void = undefined
+    onPlayerChat?: (player: Player, message: string) => false | void = undefined
+    onPlayerBallKick?: (player: Player) => void = undefined
+    onTeamGoal?: (team: TeamID) => void = undefined
+    onGameStart?: (byPlayer: Player) => void = undefined
+    onGameStop?: (byPlayer: Player | null) => void = undefined
+    onPlayerAdminChange?: (player: Player, byPlayer: Player) => void = undefined
+    onPlayerTeamChange?: (player: Player, byPlayer: Player) => void = undefined
+    onPlayerKicked?: (player: Player, reason: string, ban: boolean, byPlayer: Player) => void = undefined
+    onGameTick?: () => void = undefined
+    onGamePause?: (byPlayer: Player) => void = undefined
+    onGameUnpause?: (byPlayer: Player) => void = undefined
+    onPositionsReset?: () => void = undefined
+    onStadiumChange?: (stadiumName: string, byPlayer: Player) => void = undefined
+    onRoomLink?: (url: string) => void = undefined
 
     /*
      * Overridden original methods
