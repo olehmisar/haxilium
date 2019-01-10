@@ -5,14 +5,17 @@ import { Scores } from './interfaces/Scores';
 import { TeamID } from './interfaces/TeamID';
 import { Vector } from './interfaces/Vector';
 import { Player } from './models/Player';
+import { OriginalCallbacks } from './OriginalCallbacks';
 import { isPlayerObject } from './utils';
 
 
-export abstract class DelegatedRoom {
+export abstract class DelegatedRoom extends OriginalCallbacks {
     private room: any
     private players: { [id: number]: Player } = {}
 
     constructor(config: RoomConfig) {
+        super()
+
         this.room = window.HBInit(config)
         const events = Object.keys(this).filter(key => key.startsWith('on') && key[2] === key[2].toUpperCase())
         for (const event of events) {
@@ -63,28 +66,6 @@ export abstract class DelegatedRoom {
         const player = this.players[p.id] || (this.players[p.id] = new Player(p))
         return Object.assign(player, p)
     }
-
-    /*
-    * Original callbacks
-    */
-
-    onPlayerJoin?: (player: Player) => void = undefined
-    onPlayerLeave?: (player: Player) => void = undefined
-    onTeamVictory?: (scores: Scores) => void = undefined
-    onPlayerChat?: (player: Player, message: string) => false | void = undefined
-    onPlayerBallKick?: (player: Player) => void = undefined
-    onTeamGoal?: (team: TeamID) => void = undefined
-    onGameStart?: (byPlayer: Player) => void = undefined
-    onGameStop?: (byPlayer: Player | null) => void = undefined
-    onPlayerAdminChange?: (player: Player, byPlayer: Player) => void = undefined
-    onPlayerTeamChange?: (player: Player, byPlayer: Player) => void = undefined
-    onPlayerKicked?: (player: Player, reason: string, ban: boolean, byPlayer: Player) => void = undefined
-    onGameTick?: () => void = undefined
-    onGamePause?: (byPlayer: Player) => void = undefined
-    onGameUnpause?: (byPlayer: Player) => void = undefined
-    onPositionsReset?: () => void = undefined
-    onStadiumChange?: (stadiumName: string, byPlayer: Player) => void = undefined
-    onRoomLink?: (url: string) => void = undefined
 
     /*
      * Overridden original methods
