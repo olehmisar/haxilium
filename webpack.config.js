@@ -1,28 +1,24 @@
 const path = require('path')
 
 module.exports = {
-    entry: './src/index.js',
+    entry: './src-ts/index.ts',
     mode: 'development',
-    output: {
-        path: path.resolve(__dirname, 'dist'),
-        filename: 'bundle-dev.js',
-        libraryTarget: 'umd',
+    resolve: {
+        extensions: ['.ts', '.js']
     },
     module: {
         rules: [
             {
-                test: /\.js$/,
-                exclude: /(node_modules)/,
-                use: [
-                    {
-                        loader: 'babel-loader',
-                        options: {
-                            presets: ['@babel/preset-env'],
-                            plugins: ['transform-class-properties']
-                        },
-                    },
-                ]
-            },
-        ],
+                test: /\.ts$/,
+                use: 'ts-loader',
+                exclude: /node_modules/
+            }
+        ]
     },
+    output: {
+        path: path.resolve(__dirname, 'dist'),
+        filename: 'bundle.dev.js',
+        // TODO: re-enable
+        // libraryTarget: 'umd',
+    }
 }
