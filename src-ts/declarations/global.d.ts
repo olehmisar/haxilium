@@ -1,8 +1,8 @@
+import { NativePlayer } from '../interfaces/NativePlayer';
 import { RoomConfig } from '../interfaces/RoomConfig';
 import { Scores } from '../interfaces/Scores';
 import { TeamID } from '../interfaces/TeamID';
 import { Vector } from '../interfaces/Vector';
-import { Player } from '../models/Player';
 
 
 declare global {
@@ -31,30 +31,30 @@ declare class HBInit {
     startGame(): void
     stopGame(): void
     pauseGame(pause: boolean): void
-    getPlayer(playerId: number): Player
-    getPlayerList(): Player[]
-    getScores(): Scores
-    getBallPosition(): Vector
+    getPlayer(playerId: number): NativePlayer | null
+    getPlayerList(): NativePlayer[]
+    getScores(): Scores | null
+    getBallPosition(): Vector | null
     startRecording(): void
-    stopRecording(): Uint8Array
-    setPassword(pass: string): void
+    stopRecording(): Uint8Array | null
+    setPassword(password: string): void
 
 
-    onPlayerJoin(player: Player): void
-    onPlayerLeave(player: Player): void
+    onPlayerJoin(player: NativePlayer): void
+    onPlayerLeave(player: NativePlayer): void
     onTeamVictory(scores: Scores): void
-    onPlayerChat(player: Player, message: string): void | false
-    onPlayerBallKick(player: Player): void
+    onPlayerChat(player: NativePlayer, message: string): void | false
+    onPlayerBallKick(player: NativePlayer): void
     onTeamGoal(team: TeamID): void
-    onGameStart(byPlayer: Player): void
-    onGameStop(byPlayer: Player): void
-    onPlayerAdminChange(player: Player, byPlayer: Player): void
-    onPlayerTeamChange(player: Player, byPlayer: Player): void
-    onPlayerKicked(player: Player, reason: string, ban: boolean, byPlayer: Player): void
+    onGameStart(byPlayer: NativePlayer): void
+    onGameStop(byPlayer: NativePlayer): void
+    onPlayerAdminChange(player: NativePlayer, byPlayer: NativePlayer): void
+    onPlayerTeamChange(player: NativePlayer, byPlayer: NativePlayer): void
+    onPlayerKicked(player: NativePlayer, reason: string, ban: boolean, byPlayer: NativePlayer): void
     onGameTick(): void
-    onGamePause(byPlayer: Player): void
-    onGameUnpause(byPlayer: Player): void
+    onGamePause(byPlayer: NativePlayer): void
+    onGameUnpause(byPlayer: NativePlayer): void
     onPositionsReset(): void
-    onStadiumChange(stadiumName: string, byPlayer: Player): void
+    onStadiumChange(stadiumName: string, byPlayer: NativePlayer): void
     onRoomLink(url: string): void
 }
