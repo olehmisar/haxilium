@@ -5,20 +5,17 @@ import { Scores } from './interfaces/Scores';
 import { TeamID } from './interfaces/TeamID';
 import { Vector } from './interfaces/Vector';
 import { Player } from './models/Player';
-import { OriginalCallbacks } from './OriginalCallbacks';
+import { getNativeEvents } from './OriginalCallbacks';
 import { isPlayerObject } from './utils';
 
 
-export abstract class DelegatedRoom extends OriginalCallbacks {
+export abstract class DelegatedRoom {
     private room: any
     private players: { [id: number]: Player } = {}
 
     constructor(config: RoomConfig) {
-        super()
-
         this.room = window.HBInit(config)
-        const events = Object.keys(this).filter(key => key.startsWith('on') && key[2] === key[2].toUpperCase())
-        for (const event of events) {
+        for (const event of getNativeEvents()) {
             this.extendNativeCallback(event)
         }
     }

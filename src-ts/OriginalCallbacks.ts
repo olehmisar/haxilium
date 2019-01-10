@@ -3,22 +3,29 @@ import { TeamID } from './interfaces/TeamID';
 import { Player } from './models/Player';
 
 
+const events: string[] = []
+const NativeEvent = (): MethodDecorator => (target, propKey) => { events.push(propKey as string) }
+
+export function getNativeEvents(): string[] {
+    return events
+}
+
 export class OriginalCallbacks {
-    onPlayerJoin?: (player: Player) => void = undefined
-    onPlayerLeave?: (player: Player) => void = undefined
-    onTeamVictory?: (scores: Scores) => void = undefined
-    onPlayerChat?: (player: Player, message: string) => false | void = undefined
-    onPlayerBallKick?: (player: Player) => void = undefined
-    onTeamGoal?: (team: TeamID) => void = undefined
-    onGameStart?: (byPlayer: Player) => void = undefined
-    onGameStop?: (byPlayer: Player | null) => void = undefined
-    onPlayerAdminChange?: (player: Player, byPlayer: Player) => void = undefined
-    onPlayerTeamChange?: (player: Player, byPlayer: Player) => void = undefined
-    onPlayerKicked?: (player: Player, reason: string, ban: boolean, byPlayer: Player) => void = undefined
-    onGameTick?: () => void = undefined
-    onGamePause?: (byPlayer: Player) => void = undefined
-    onGameUnpause?: (byPlayer: Player) => void = undefined
-    onPositionsReset?: () => void = undefined
-    onStadiumChange?: (stadiumName: string, byPlayer: Player) => void = undefined
-    onRoomLink?: (url: string) => void = undefined
+    @NativeEvent() onPlayerJoin(player: Player): void { }
+    @NativeEvent() onPlayerLeave(player: Player): void { }
+    @NativeEvent() onTeamVictory(scores: Scores): void { }
+    @NativeEvent() onPlayerChat(player: Player, message: string): false | void { }
+    @NativeEvent() onPlayerBallKick(player: Player): void { }
+    @NativeEvent() onTeamGoal(team: TeamID): void { }
+    @NativeEvent() onGameStart(byPlayer: Player): void { }
+    @NativeEvent() onGameStop(byPlayer: Player | null): void { }
+    @NativeEvent() onPlayerAdminChange(player: Player, byPlayer: Player): void { }
+    @NativeEvent() onPlayerTeamChange(player: Player, byPlayer: Player): void { }
+    @NativeEvent() onPlayerKicked(player: Player, reason: string, ban: boolean, byPlayer: Player): void { }
+    @NativeEvent() onGameTick(): void { }
+    @NativeEvent() onGamePause(byPlayer: Player): void { }
+    @NativeEvent() onGameUnpause(byPlayer: Player): void { }
+    @NativeEvent() onPositionsReset(): void { }
+    @NativeEvent() onStadiumChange(stadiumName: string, byPlayer: Player): void { }
+    @NativeEvent() onRoomLink(url: string): void { }
 }
