@@ -36,6 +36,9 @@ export abstract class DelegatedRoom {
 
         Object.defineProperty(this, event, {
             set(this: DelegatedRoom, callback) {
+                if (typeof callback !== 'function')
+                    callback = () => { }
+
                 this.room[event] = (...args: any[]): any => {
                     callback.apply(this, args)
                     this.executeCallbacks(event, this.prepareCallbackArguments(args))
