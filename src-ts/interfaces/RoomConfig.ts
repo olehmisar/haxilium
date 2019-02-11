@@ -1,5 +1,4 @@
-import { Module } from '../models/Module';
-
+import { ModuleClass } from './Module';
 
 export interface RoomConfig {
     roomName?: string
@@ -13,5 +12,5 @@ export interface RoomConfig {
         lon?: number
     }
     token?: string,
-    modules?: { new(...args: any[]): Module }[],
+    modules?: ModuleClass[],
 }

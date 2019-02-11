@@ -1,7 +1,7 @@
 export interface Scores {
-    red: number
-    blue: number
-    time: number
-    scoreLimit: number
-    timeLimit: number
+    readonly red: number
+    readonly blue: number
+    readonly time: number
+    readonly scoreLimit: number
+    readonly timeLimit: number
 }
