@@ -12,7 +12,7 @@ import { Entries, isPlayerObject, Keys } from './utils';
 export abstract class DelegatedRoom<TPlayer extends Player> extends HaxballEvents<TPlayer> {
     private room: any
     private players: { [id: number]: TPlayer } = {}
-    private Player: new (...args: any[]) => TPlayer
+    protected Player: new (...args: any[]) => TPlayer
 
     constructor(config: RoomConfig<TPlayer>) {
         super()

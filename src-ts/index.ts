@@ -7,6 +7,7 @@ export default function haxilium<TPlayer extends Player>(config: RoomConfig<TPla
     return new Room(config)
 }
 
+export { Event } from './decorators/Event';
 export { Module } from './decorators/Module';
 export { HaxballEventsInterface as HaxballEvents } from './HaxballEvents';
 export { Scores } from './interfaces/Scores';

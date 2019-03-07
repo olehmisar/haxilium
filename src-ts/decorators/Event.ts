@@ -1,17 +1,21 @@
 import 'reflect-metadata';
+import { capitalize } from '../utils';
 
 
-// TODO: use Symbol, not string
-const metadataKey = 'properties-with-events'//Symbol(`room-events`)
-type PropKeyWithEvent = [string, string]
+const metadataKey = Symbol(`room:events`)
+type PropNameWithEvent = [string, string]
 
 export function Event(event: string): PropertyDecorator {
-    return (target: Object, propKey: string | symbol) => {
-        if (typeof propKey === 'symbol')
+    return (target: object, propName: string | symbol) => {
+        if (typeof propName === 'symbol')
             throw new TypeError("Decorator 'Event' cannot decorate a property with Symbol key")
 
-        const propsWithEvents = Reflect.getMetadata(metadataKey, target)
-        const data: PropKeyWithEvent = [propKey, event]
+        if (Object.getOwnPropertyDescriptor(target, propName))
+            throw new TypeError("Cannot decorate method or get-set with 'Event' decorator")
+
+
+        const propsWithEvents: PropNameWithEvent[] | undefined = Reflect.getMetadata(metadataKey, target)
+        const data: PropNameWithEvent = [propName, 'on' + capitalize(event)]
         if (propsWithEvents) {
             propsWithEvents.push(data)
         } else {
@@ -20,6 +24,6 @@ export function Event(event: string): PropertyDecorator {
     }
 }
 
-export function getPropKeysWithEvents(target: Object): PropKeyWithEvent[] {
-    return <PropKeyWithEvent[]>Reflect.getMetadata(metadataKey, target) || []
+export function getPropNamesWithEvents(target: object): PropNameWithEvent[] {
+    return Reflect.getMetadata(metadataKey, target) || []
 }

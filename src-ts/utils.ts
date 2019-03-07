@@ -13,6 +13,9 @@ export function _throw(err: any): never {
     throw err
 }
 
+export function capitalize(str: string): string {
+    return str[0].toUpperCase() + str.substring(1)
+}
 
 export type ConstructorOf<T> = { new(...args: any[]): T }
 export type Entries<T> = [keyof T, T[keyof T]][]

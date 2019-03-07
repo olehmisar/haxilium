@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { getPropNamesWithEvents } from './decorators/Event';
 import { DelegatedRoom } from './DelegatedRoom';
 import { HaxballEvents } from './HaxballEvents';
 import { Module } from './interfaces/Module';
@@ -13,6 +14,7 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
     constructor(config: RoomConfig<TPlayer>) {
         super(config)
         this.createModules(config.modules || [])
+        this.createPlayerEvents()
     }
 
     protected executeCallbacks<E extends keyof HaxballEvents<TPlayer>>(event: E, args: Parameters<HaxballEvents<TPlayer>[E]>) {
@@ -24,6 +26,23 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
             } catch (err) {
                 console.error(err)
             }
+        }
+    }
+
+    private createPlayerEvents() {
+        for (const [prop, event] of getPropNamesWithEvents(this.Player.prototype)) {
+            const propSymbol = Symbol(prop)
+            const room = this
+            Object.defineProperty(this.Player.prototype, prop, {
+                get() { return this[propSymbol] },
+                set(value: any) {
+                    if (this[propSymbol] !== value) {
+                        this[propSymbol] = value
+                        // TODO: remove type assertion.
+                        setTimeout(() => room.executeCallbacks(event as any, [this]), 0)
+                    }
+                }
+            })
         }
     }
 
