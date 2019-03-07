@@ -107,12 +107,12 @@ export abstract class DelegatedRoom<TPlayer extends Player> extends HaxballEvent
         const player = this.players[p.id] || (this.players[p.id] = new this.Player(this.room, p))
 
         const changedProps: Pick<NativePlayer, 'position'> & {
-            _team?: NativePlayer['team'],
-            _admin?: NativePlayer['admin']
+            __team?: NativePlayer['team'],
+            __admin?: NativePlayer['admin']
         } = { position: p.position }
 
-        if (event === 'onPlayerTeamChange') changedProps._team = p.team
-        else if (event === 'onPlayerAdminChange') changedProps._admin = p.admin
+        if (event === 'onPlayerTeamChange') changedProps.__team = p.team
+        else if (event === 'onPlayerAdminChange') changedProps.__admin = p.admin
 
         return Object.assign(player, changedProps)
     }

@@ -14,31 +14,30 @@ export class Player {
     readonly auth: string
     readonly conn: string
 
-    // TODO: rename _team and _admin to __team and __admin
-    private _team!: Team
-    private _admin!: boolean
+    private __team!: Team
+    private __admin!: boolean
 
-    constructor(private readonly room: PlayerSetters, { id, name, position, auth, conn, team, admin }: NativePlayer) {
+    constructor(private readonly __room: PlayerSetters, { id, name, position, auth, conn, team, admin }: NativePlayer) {
         this.id = id
         this.name = name
         this.position = position
         this.auth = auth
         this.conn = conn
         Object.defineProperties(this, {
-            _team: { value: team, enumerable: false, writable: true },
-            _admin: { value: admin, enumerable: false, writable: true }
+            __team: { value: team, enumerable: false, writable: true },
+            __admin: { value: admin, enumerable: false, writable: true }
         })
     }
 
-    get team() { return this._team }
+    get team() { return this.__team }
     set team(value: Team) {
-        this._team = value
-        this.room.setPlayerTeam(this.id, value)
+        this.__team = value
+        this.__room.setPlayerTeam(this.id, value)
     }
 
-    get admin() { return this._admin }
+    get admin() { return this.__admin }
     set admin(value: boolean) {
-        this._admin = value
-        this.room.setPlayerAdmin(this.id, value)
+        this.__admin = value
+        this.__room.setPlayerAdmin(this.id, value)
     }
 }
