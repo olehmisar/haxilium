@@ -77,8 +77,7 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
                 dependencies.push(this)
 
             } else {
-                // TODO: remove type assertion
-                dependencies.push(this.createOrGetModule(DependencyClass as ConstructorOf<object>))
+                dependencies.push(this.createOrGetModule(DependencyClass))
             }
         }
 
