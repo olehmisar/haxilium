@@ -38,7 +38,7 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
                     if (this[propSymbol] !== value) {
                         this[propSymbol] = value
                         // TODO: remove type assertion.
-                        setTimeout(() => room.executeCallbacks(event as any, [this]), 0)
+                        room.executeCallbacks(event as any, [this])
                     }
                 }
             })
