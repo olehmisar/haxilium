@@ -1,10 +1,10 @@
 import deepFreeze from 'deep-freeze';
-import { HaxballEvents } from './HaxballEvents';
 import { NativePlayer } from './interfaces/NativePlayer';
 import { RoomConfig } from './interfaces/RoomConfig';
 import { Scores } from './interfaces/Scores';
 import { Team } from './interfaces/Team';
 import { Vector } from './interfaces/Vector';
+import { HaxballEvents } from './models/HaxballEvents';
 import { Player } from './models/Player';
 import { Entries, isPlayerObject, Keys } from './utils';
 

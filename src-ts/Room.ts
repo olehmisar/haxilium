@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import { getPropNamesWithEvents } from './decorators/Event';
 import { DelegatedRoom } from './DelegatedRoom';
-import { HaxballEvents } from './HaxballEvents';
 import { Module } from './interfaces/Module';
 import { RoomConfig } from './interfaces/RoomConfig';
+import { HaxballEvents } from './models/HaxballEvents';
 import { Player } from './models/Player';
 import { ConstructorOf, MetadataParamTypes } from './utils';
 

@@ -1,6 +1,6 @@
-import { Scores } from './interfaces/Scores';
-import { Team } from './interfaces/Team';
-import { Player } from './models/Player';
+import { Scores } from '../interfaces/Scores';
+import { Team } from '../interfaces/Team';
+import { Player } from './Player';
 
 
 /*
