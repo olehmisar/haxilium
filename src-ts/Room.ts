@@ -39,11 +39,8 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
 
         const DependencyClasses: MetadataParamTypes<typeof Room | ConstructorOf<Module<TPlayer>>> = Reflect.getMetadata('design:paramtypes', ModuleClass)
 
-        if (!DependencyClasses)
-            throw new TypeError(`Cannot inject dependencies in the ${ModuleClass.name} because it is not decorated with proper decorator`)
-
         const dependencies: (Room<TPlayer> | Module<TPlayer>)[] = []
-        for (const DependencyClass of DependencyClasses) {
+        for (const DependencyClass of DependencyClasses || []) {
             if (DependencyClass === Number ||
                 DependencyClass === String ||
                 DependencyClass === Boolean ||
