@@ -1,25 +1,27 @@
 import deepFreeze from 'deep-freeze';
-import { HaxballEvents, HaxballEventsClass } from './HaxballEvents';
+import { HaxballEvents } from './HaxballEvents';
 import { NativePlayer } from './interfaces/NativePlayer';
 import { RoomConfig } from './interfaces/RoomConfig';
 import { Scores } from './interfaces/Scores';
 import { Team } from './interfaces/Team';
 import { Vector } from './interfaces/Vector';
 import { Player } from './models/Player';
-import { Entries, FilterOptions, isPlayerObject, Keys } from './utils';
+import { Entries, isPlayerObject, Keys } from './utils';
 
 
-export abstract class DelegatedRoom extends HaxballEventsClass {
+export abstract class DelegatedRoom<TPlayer extends Player> extends HaxballEvents<TPlayer> {
     private room: any
-    private players: { [id: number]: Player } = {}
+    private players: { [id: number]: TPlayer } = {}
+    private Player: new (...args: any[]) => TPlayer
 
-    constructor(config: RoomConfig) {
+    constructor(config: RoomConfig<TPlayer>) {
         super()
         this.room = window.HBInit(config)
+        this.Player = config.Player || <any>Player
 
-        const events = <Keys<HaxballEvents>>Object.keys(new HaxballEventsClass())
+        const events = Object.keys(new HaxballEvents()) as Keys<HaxballEvents<TPlayer>>
         for (const event of events) {
-            this.room[event] = (...args: Parameters<HaxballEvents[keyof HaxballEvents]>) => {
+            this.room[event] = (...args: Parameters<HaxballEvents<TPlayer>[keyof HaxballEvents<TPlayer>]>) => {
                 this.executeCallbacks(event, this.prepareCallbackArguments(event, args))
             }
         }
@@ -31,12 +33,12 @@ export abstract class DelegatedRoom extends HaxballEventsClass {
      * =======================
      */
 
-    protected abstract executeCallbacks<E extends keyof HaxballEvents>(event: E, args: Parameters<HaxballEvents[E]>): void
+    protected abstract executeCallbacks<E extends keyof HaxballEvents<TPlayer>>(event: E, args: Parameters<HaxballEvents<TPlayer>[E]>): void
 
     /**
      * Replace native players with `Player` wrappers.
      */
-    private prepareCallbackArguments<E extends keyof HaxballEvents>(event: E, args: Parameters<HaxballEvents[E]>): typeof args {
+    private prepareCallbackArguments<E extends keyof HaxballEvents<TPlayer>>(event: E, args: Parameters<HaxballEvents<TPlayer>[E]>): typeof args {
         // TODO: make `args: ReplacePlayerWithNativePlayer<Parameters<HaxballEvents[keyof HaxballEvents]>>`
 
         for (let i = 0; i < args.length; i++) {
@@ -55,24 +57,24 @@ export abstract class DelegatedRoom extends HaxballEventsClass {
      * =====================
      */
 
-    getPlayer(id: number) {
+    getPlayer(id: number): TPlayer | null {
         const p: NativePlayer = this.room.getPlayer(id)
         return p === null ? null : this.wrapPlayer(p)
     }
 
-    getPlayerList(opts?: object): Player[]
-    getPlayerList(teamsOrder: [Team],        /**/ opts?: FilterOptions<Player>): [Player[]]
-    getPlayerList(teamsOrder: [Team, Team],  /**/ opts?: FilterOptions<Player>): [Player[], Player[]]
-    getPlayerList(teamsOrder: [Team, Team, Team], opts?: FilterOptions<Player>): [Player[], Player[], Player[]]
-    getPlayerList(teamsOrder?: [Team, Team?, Team?] | typeof opts, opts: FilterOptions<Player> = {}): Player[] | Player[][] {
+    getPlayerList(opts?: object): TPlayer[]
+    getPlayerList(teamsOrder: [Team],        /**/ opts?: Partial<TPlayer>): [TPlayer[]]
+    getPlayerList(teamsOrder: [Team, Team],  /**/ opts?: Partial<TPlayer>): [TPlayer[], TPlayer[]]
+    getPlayerList(teamsOrder: [Team, Team, Team], opts?: Partial<TPlayer>): [TPlayer[], TPlayer[], TPlayer[]]
+    getPlayerList(teamsOrder?: [Team, Team?, Team?] | typeof opts, opts: Partial<TPlayer> = {}): TPlayer[] | TPlayer[][] {
         if (!Array.isArray(teamsOrder)) {
             opts = teamsOrder || {}
             teamsOrder = undefined
         }
 
-        const players: Player[] = []
-        for (let p of this.room.getPlayerList()) {
-            p = this.wrapPlayer(p)
+        const players: TPlayer[] = []
+        for (const nativePlayer of this.room.getPlayerList()) {
+            const p = this.wrapPlayer(nativePlayer)
             if (this.playerFilter(p, opts))
                 players.push(p)
         }
@@ -81,7 +83,7 @@ export abstract class DelegatedRoom extends HaxballEventsClass {
         if (typeof teamsOrder === 'undefined') return players
 
         // Return array of teams.
-        const teams: [Player[], Player[], Player[]] = [[], [], []]
+        const teams: [TPlayer[], TPlayer[], TPlayer[]] = [[], [], []]
         for (let p of players) {
             // Get team index.
             let index = teamsOrder.indexOf(p.team)
@@ -92,7 +94,7 @@ export abstract class DelegatedRoom extends HaxballEventsClass {
         return teams
     }
 
-    private playerFilter(player: Player, opts: FilterOptions<Player>): boolean {
+    private playerFilter(player: TPlayer, opts: Partial<TPlayer>): boolean {
         if (player.id === 0) return false
         for (const [key, filterValue] of <Entries<typeof opts>>Object.entries(opts)) {
             if (player[key] === filterValue)
@@ -101,8 +103,8 @@ export abstract class DelegatedRoom extends HaxballEventsClass {
         return true
     }
 
-    private wrapPlayer(p: NativePlayer, event?: keyof HaxballEvents): Player {
-        const player = this.players[p.id] || (this.players[p.id] = new Player(this.room, p))
+    private wrapPlayer(p: NativePlayer, event?: keyof HaxballEvents<TPlayer>): TPlayer {
+        const player = this.players[p.id] || (this.players[p.id] = new this.Player(this.room, p))
 
         const changedProps: Pick<NativePlayer, 'position'> & {
             _team?: NativePlayer['team'],

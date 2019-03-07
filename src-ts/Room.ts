@@ -1,19 +1,21 @@
 import 'reflect-metadata';
 import { DelegatedRoom } from './DelegatedRoom';
 import { HaxballEvents } from './HaxballEvents';
-import { Module, ModuleClass, PossibleModuleParameter } from './interfaces/Module';
+import { Module } from './interfaces/Module';
 import { RoomConfig } from './interfaces/RoomConfig';
+import { Player } from './models/Player';
+import { ConstructorOf, MetadataParamTypes } from './utils';
 
 
-export class Room extends DelegatedRoom {
-    private modules: Module[] = []
+export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
+    private modules: Module<TPlayer>[] = []
 
-    constructor(config: RoomConfig) {
+    constructor(config: RoomConfig<TPlayer>) {
         super(config)
         this.createModules(config.modules || [])
     }
 
-    protected executeCallbacks<E extends keyof HaxballEvents>(event: E, args: Parameters<HaxballEvents[E]>) {
+    protected executeCallbacks<E extends keyof HaxballEvents<TPlayer>>(event: E, args: Parameters<HaxballEvents<TPlayer>[E]>) {
         for (const module of this.getModules()) {
             try {
                 // TODO: remove type assertion.
@@ -25,21 +27,22 @@ export class Room extends DelegatedRoom {
         }
     }
 
-    private createModules(ModuleClasses: ModuleClass[]) {
+    private createModules(ModuleClasses: Array<ConstructorOf<Module<TPlayer>>>) {
         for (const ModuleClass of ModuleClasses) {
             this.createOrGetModule(ModuleClass)
         }
     }
 
-    private createOrGetModule(ModuleClass: ModuleClass): Module {
+    private createOrGetModule(ModuleClass: ConstructorOf<Module<TPlayer>>): Module<TPlayer> {
         let module = this.modules.find(module => module instanceof ModuleClass)
         if (module) return module
 
-        const DependencyClasses: PossibleModuleParameter[] | undefined = Reflect.getMetadata('design:paramtypes', ModuleClass)
+        const DependencyClasses: MetadataParamTypes<typeof Room | ConstructorOf<Module<TPlayer>>> = Reflect.getMetadata('design:paramtypes', ModuleClass)
+
         if (!DependencyClasses)
             throw new TypeError(`Cannot inject dependencies in the ${ModuleClass.name} because it is not decorated with proper decorator`)
 
-        const dependencies: (Room | Module)[] = []
+        const dependencies: (Room<TPlayer> | Module<TPlayer>)[] = []
         for (const DependencyClass of DependencyClasses) {
             if (DependencyClass === Number ||
                 DependencyClass === String ||
@@ -60,7 +63,7 @@ export class Room extends DelegatedRoom {
 
             } else {
                 // TODO: remove type assertion
-                dependencies.push(this.createOrGetModule(<ModuleClass>DependencyClass))
+                dependencies.push(this.createOrGetModule(DependencyClass as ConstructorOf<Module<TPlayer>>))
             }
         }
 
@@ -69,9 +72,8 @@ export class Room extends DelegatedRoom {
         return module
     }
 
-    private * getModules(): IterableIterator<Module> {
+    private * getModules(): IterableIterator<Module<TPlayer>> {
         yield* this.modules
-        // TODO: remove type assertion.
-        yield <Module><unknown>this
+        yield this
     }
 }

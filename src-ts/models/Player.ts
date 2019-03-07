@@ -10,10 +10,11 @@ type PlayerSetters = {
 export class Player {
     readonly id: number
     readonly name: string
-    readonly position: Readonly<Vector | null>
+    readonly position: Readonly<Vector> | null
     readonly auth: string
     readonly conn: string
 
+    // TODO: rename _team and _admin to __team and __admin
     private _team!: Team
     private _admin!: boolean
 

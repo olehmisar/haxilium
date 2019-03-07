@@ -9,7 +9,26 @@ export function isPlayerObject(obj: unknown): obj is NativePlayer {
     return true
 }
 
-export type FilterOptions<T> = Partial<{ [K in keyof T]: T[K] }>
+export function _throw(err: any): never {
+    throw err
+}
+
+
+export type ConstructorOf<T> = { new(...args: any[]): T }
 export type Entries<T> = [keyof T, T[keyof T]][]
 export type Keys<T> = (keyof T)[]
 export type ArrayValuesType<T extends any[]> = T extends (infer U)[] ? U : never
+export type UnionToIntersection<U> =
+    (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never
+
+
+export type MetadataParamTypes<T = undefined> = undefined | (
+    | T
+    | typeof Number
+    | typeof String
+    | typeof Boolean
+    | typeof Object
+    | typeof Array
+    | typeof Function
+    | undefined
+)[]

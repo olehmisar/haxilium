@@ -1,6 +1,9 @@
-import { ModuleClass } from './Module';
+import { Player } from '../models/Player';
+import { ConstructorOf } from '../utils';
+import { Module } from './Module';
 
-export interface RoomConfig {
+
+export interface RoomConfig<TPlayer extends Player> {
     roomName?: string
     playerName?: string
     password?: string
@@ -12,5 +15,6 @@ export interface RoomConfig {
         lon?: number
     }
     token?: string,
-    modules?: ModuleClass[],
+    modules?: ConstructorOf<Module<TPlayer>>[],
+    Player?: new (...args: any[]) => TPlayer
 }
