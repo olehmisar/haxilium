@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import { getPropNamesWithEvents } from './decorators/Event';
 import { DelegatedRoom } from './DelegatedRoom';
-import { Module } from './interfaces/Module';
 import { RoomConfig } from './interfaces/RoomConfig';
 import { HaxballEvents } from './models/HaxballEvents';
 import { Player } from './models/Player';
@@ -9,7 +8,7 @@ import { ConstructorOf, MetadataParamTypes } from './utils';
 
 
 export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
-    private modules: Module<TPlayer>[] = []
+    private modules: object[] = []
 
     constructor(config: RoomConfig<TPlayer>) {
         super(config)
@@ -46,19 +45,19 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
         }
     }
 
-    private createModules(ModuleClasses: Array<ConstructorOf<Module<TPlayer>>>) {
+    private createModules(ModuleClasses: ConstructorOf<object>[]) {
         for (const ModuleClass of ModuleClasses) {
             this.createOrGetModule(ModuleClass)
         }
     }
 
-    private createOrGetModule(ModuleClass: ConstructorOf<Module<TPlayer>>): Module<TPlayer> {
+    private createOrGetModule(ModuleClass: ConstructorOf<object>): object {
         let module = this.modules.find(module => module instanceof ModuleClass)
         if (module) return module
 
-        const DependencyClasses: MetadataParamTypes<typeof Room | ConstructorOf<Module<TPlayer>>> = Reflect.getMetadata('design:paramtypes', ModuleClass)
+        const DependencyClasses: MetadataParamTypes<typeof Room | ConstructorOf<object>> = Reflect.getMetadata('design:paramtypes', ModuleClass)
 
-        const dependencies: (Room<TPlayer> | Module<TPlayer>)[] = []
+        const dependencies: (Room<TPlayer> | object)[] = []
         for (const DependencyClass of DependencyClasses || []) {
             if (DependencyClass === Number ||
                 DependencyClass === String ||
@@ -79,7 +78,7 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
 
             } else {
                 // TODO: remove type assertion
-                dependencies.push(this.createOrGetModule(DependencyClass as ConstructorOf<Module<TPlayer>>))
+                dependencies.push(this.createOrGetModule(DependencyClass as ConstructorOf<object>))
             }
         }
 
@@ -88,7 +87,7 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
         return module
     }
 
-    private * getModules(): IterableIterator<Module<TPlayer>> {
+    private * getModules(): IterableIterator<any> {
         yield* this.modules
         yield this
     }

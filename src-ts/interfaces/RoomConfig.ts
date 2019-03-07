@@ -1,6 +1,5 @@
 import { Player } from '../models/Player';
 import { ConstructorOf } from '../utils';
-import { Module } from './Module';
 
 
 export interface RoomConfig<TPlayer extends Player> {
@@ -15,6 +14,6 @@ export interface RoomConfig<TPlayer extends Player> {
         lon?: number
     }
     token?: string,
-    modules?: ConstructorOf<Module<TPlayer>>[],
-    Player?: new (...args: any[]) => TPlayer
+    modules?: ConstructorOf<object>[],
+    Player?: ConstructorOf<TPlayer>,
 }
