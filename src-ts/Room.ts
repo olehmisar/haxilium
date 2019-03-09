@@ -3,7 +3,7 @@ import { getPropNamesWithEvents } from './decorators/Event';
 import { DelegatedRoom } from './DelegatedRoom';
 import { RoomConfig } from './interfaces/RoomConfig';
 import { Player } from './models/Player';
-import { ConstructorOf, MetadataParamTypes } from './utils';
+import { capitalize, ConstructorOf, MetadataParamTypes } from './utils';
 
 
 export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
@@ -13,6 +13,10 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
         super(config)
         this.createModules(config.modules || [])
         this.createPlayerEvents()
+    }
+
+    dispatchEvent(event: string, args: any[]) {
+        return this.executeCallbacks('on' + capitalize(event), args)
     }
 
     protected executeCallbacks(event: string, args: any[]) {
