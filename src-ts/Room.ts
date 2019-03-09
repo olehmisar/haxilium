@@ -21,11 +21,13 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
 
     protected executeCallbacks(event: string, args: any[]) {
         const returns: any[] = []
-        for (const module of this.getModules()) {
+        const modules = this.modules.concat([this])
+        for (let i = 0; i < modules.length; i++) {
+            // TODO: remove type assertion.
+            const module: any = modules[i]
             try {
-                // TODO: remove type assertion.
                 if (module[event])
-                    returns.push((<any>module[event])(...args))
+                    returns.push(module[event](...args))
             } catch (err) {
                 console.error(err)
             }
@@ -90,10 +92,5 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
         module = new ModuleClass(...dependencies)
         this.modules.push(module)
         return module
-    }
-
-    private * getModules(): IterableIterator<any> {
-        yield* this.modules
-        yield this
     }
 }
