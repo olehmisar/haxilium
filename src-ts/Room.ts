@@ -16,7 +16,7 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
     }
 
     dispatchEvent(event: string, args: any[]) {
-        return this.executeCallbacks('on' + capitalize(event), args)
+        this.executeCallbacks('on' + capitalize(event), args)
     }
 
     protected executeCallbacks(event: string, args: any[]) {
