@@ -1,13 +1,14 @@
 import 'reflect-metadata';
 import { getPropNamesWithEvents } from './decorators/Event';
 import { DelegatedRoom } from './DelegatedRoom';
+import { Module } from './interfaces/Module';
 import { RoomConfig } from './interfaces/RoomConfig';
 import { Player } from './models/Player';
 import { capitalize, ConstructorOf, MetadataParamTypes } from './utils';
 
 
 export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
-    private modules: object[] = []
+    private modules: Module[] = []
 
     constructor(config: RoomConfig<TPlayer>) {
         super(config)
@@ -23,11 +24,11 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
         const returns: any[] = []
         const modules = this.modules.concat([this])
         for (let i = 0; i < modules.length; i++) {
-            // TODO: remove type assertion.
-            const module: any = modules[i]
+            const module = modules[i]
             try {
                 if (module[event])
-                    returns.push(module[event](...args))
+                    // TODO: remove type assertion.
+                    returns.push((module[event] as (...args: any[]) => any)(...args))
             } catch (err) {
                 console.error(err)
             }
@@ -52,19 +53,19 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
         }
     }
 
-    private createModules(ModuleClasses: ConstructorOf<object>[]) {
+    private createModules(ModuleClasses: ConstructorOf<Module>[]) {
         for (const ModuleClass of ModuleClasses) {
             this.createOrGetModule(ModuleClass)
         }
     }
 
-    private createOrGetModule(ModuleClass: ConstructorOf<object>): object {
+    private createOrGetModule(ModuleClass: ConstructorOf<Module>): Module {
         let module = this.modules.find(module => module instanceof ModuleClass)
         if (module) return module
 
-        const DependencyClasses: MetadataParamTypes<typeof Room | ConstructorOf<object>> = Reflect.getMetadata('design:paramtypes', ModuleClass)
+        const DependencyClasses: MetadataParamTypes<typeof Room | ConstructorOf<Module>> = Reflect.getMetadata('design:paramtypes', ModuleClass)
 
-        const dependencies: (Room<TPlayer> | object)[] = []
+        const dependencies: (Room<TPlayer> | Module)[] = []
         for (const DependencyClass of DependencyClasses || []) {
             if (DependencyClass === Number ||
                 DependencyClass === String ||
