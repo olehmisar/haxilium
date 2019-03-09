@@ -15,7 +15,7 @@ export class HaxballEvents<TPlayer extends Player> {
     onPlayerJoin: (player: TPlayer) => void = () => { }
     onPlayerLeave: (player: TPlayer) => void = () => { }
     onTeamVictory: (scores: Scores) => void = () => { }
-    onPlayerChat: (player: TPlayer, message: string) => false | void = () => { }
+    onPlayerChat: (player: TPlayer, message: string) => boolean | void = () => { }
     onPlayerBallKick: (player: TPlayer) => void = () => { }
     onTeamGoal: (team: Team) => void = () => { }
     onGameStart: (byPlayer: TPlayer) => void = () => { }
