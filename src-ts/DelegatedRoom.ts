@@ -87,11 +87,10 @@ export abstract class DelegatedRoom<TPlayer extends Player> extends HaxballEvent
         const teams: [TPlayer[], TPlayer[], TPlayer[]] = [[], [], []]
         for (let i = 0; i < players.length; i++) {
             const p = players[i]
-            // Get team index.
-            let index = teamsOrder.indexOf(p.team)
-            // If no order index is given, append team to the end.
-            if (index === -1) index = teamsOrder.length
-            teams[index].push(p)
+            const index = teamsOrder.indexOf(p.team)
+            if (index !== -1) {
+                teams[index].push(p)
+            }
         }
         return teams
     }
