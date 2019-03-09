@@ -33,7 +33,7 @@ export abstract class DelegatedRoom<TPlayer extends Player> extends HaxballEvent
      * =======================
      */
 
-    protected abstract executeCallbacks<E extends keyof HaxballEvents<TPlayer>>(event: E, args: Parameters<HaxballEvents<TPlayer>[E]>): void
+    protected abstract executeCallbacks(event: string, args: any[]): void
 
     /**
      * Replace native players with `Player` wrappers.

@@ -2,7 +2,6 @@ import 'reflect-metadata';
 import { getPropNamesWithEvents } from './decorators/Event';
 import { DelegatedRoom } from './DelegatedRoom';
 import { RoomConfig } from './interfaces/RoomConfig';
-import { HaxballEvents } from './models/HaxballEvents';
 import { Player } from './models/Player';
 import { ConstructorOf, MetadataParamTypes } from './utils';
 
@@ -16,7 +15,7 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
         this.createPlayerEvents()
     }
 
-    protected executeCallbacks<E extends keyof HaxballEvents<TPlayer>>(event: E, args: Parameters<HaxballEvents<TPlayer>[E]>) {
+    protected executeCallbacks(event: string, args: any[]) {
         for (const module of this.getModules()) {
             try {
                 // TODO: remove type assertion.
