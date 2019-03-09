@@ -20,15 +20,18 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
     }
 
     protected executeCallbacks(event: string, args: any[]) {
+        const returns: any[] = []
         for (const module of this.getModules()) {
             try {
                 // TODO: remove type assertion.
                 if (module[event])
-                    (<any>module[event])(...args)
+                    returns.push((<any>module[event])(...args))
             } catch (err) {
                 console.error(err)
             }
         }
+
+        if (returns.some(v => v === false)) return false
     }
 
     private createPlayerEvents() {

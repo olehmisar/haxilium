@@ -22,7 +22,7 @@ export abstract class DelegatedRoom<TPlayer extends Player> extends HaxballEvent
         const events = Object.keys(new HaxballEvents()) as Keys<HaxballEvents<TPlayer>>
         for (const event of events) {
             this.room[event] = (...args: Parameters<HaxballEvents<TPlayer>[keyof HaxballEvents<TPlayer>]>) => {
-                this.executeCallbacks(event, this.prepareCallbackArguments(event, args))
+                return this.executeCallbacks(event, this.prepareCallbackArguments(event, args))
             }
         }
     }
