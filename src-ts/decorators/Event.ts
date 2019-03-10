@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { capitalize } from '../utils';
 
-
+// TODO: replace Symbol with string literals
 const metadataKey = Symbol(`room:events`)
 type PropNameWithEvent = [string, string]
 

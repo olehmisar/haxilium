@@ -1,4 +1,4 @@
-import { NativePlayer } from './interfaces/NativePlayer';
+import { NativePlayer } from '../interfaces/NativePlayer';
 
 const playerProps = 'id, name, team, admin, position'.split(', ')
 export function isPlayerObject(obj: unknown): obj is NativePlayer {
@@ -35,3 +35,5 @@ export type MetadataParamTypes<T = undefined> = undefined | (
     | typeof Function
     | undefined
 )[]
+
+export * from './parseCommandString';

@@ -1,14 +1,17 @@
 import 'reflect-metadata';
+import { getModuleCommands } from './decorators/CommandDecorator';
 import { getPropNamesWithEvents } from './decorators/Event';
 import { DelegatedRoom } from './DelegatedRoom';
+import { UnknownCommandError } from './errors';
 import { Module } from './interfaces/Module';
 import { RoomConfig } from './interfaces/RoomConfig';
 import { Player } from './models/Player';
-import { capitalize, ConstructorOf, MetadataParamTypes } from './utils';
+import { capitalize, ConstructorOf, MetadataParamTypes, parseCommandString } from './utils';
 
 
 export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
     private modules: Module[] = []
+    private commandLookup: { [name: string]: (player: TPlayer, args: string[]) => any } = {}
 
     constructor(config: RoomConfig<TPlayer>) {
         super(config)
@@ -18,6 +21,17 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
 
     dispatchEvent(event: string, args: any[]) {
         this.executeCallbacks('on' + capitalize(event), args)
+    }
+
+    executeCommand(player: TPlayer, cmd: string) {
+        const args = parseCommandString(cmd)
+        const name = args[0] = args[0].toLowerCase()
+
+        const command = this.commandLookup[name]
+        if (!command)
+            throw new UnknownCommandError(name)
+
+        command(player, args)
     }
 
     protected executeCallbacks(event: string, args: any[]) {
@@ -35,6 +49,23 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
         }
 
         if (returns.some(v => v === false)) return false
+    }
+
+    private createCommands(module: Module, ModuleClass: ConstructorOf<Module>) {
+        const commands = getModuleCommands(ModuleClass)
+        for (const [key, { names }] of commands) {
+            if (names.length === 0)
+                throw new TypeError(`Cannot create command in ${ModuleClass.name} module. command.names is an empty array`)
+
+            for (let name of names) {
+                name = name.toLowerCase()
+                if (this.commandLookup[name])
+                    throw new TypeError(`Cannot create command in ${ModuleClass.name} module. Command with ${name} name already exists`)
+
+                // TODO: remove type assertion.
+                this.commandLookup[name] = (<any>module)[key].bind(module)
+            }
+        }
     }
 
     private createPlayerEvents() {
@@ -91,6 +122,9 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
 
         module = new ModuleClass(...dependencies)
         this.modules.push(module)
+
+        this.createCommands(module, ModuleClass)
+
         return module
     }
 }
