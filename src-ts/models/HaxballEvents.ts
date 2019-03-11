@@ -3,11 +3,6 @@ import { Team } from '../interfaces/Team';
 import { Player } from './Player';
 
 
-/*
- * Users will implement this interface to make type-safe event callbacks
- */
-export interface HaxballEventsInterface<TPlayer extends Player> extends Partial<HaxballEvents<TPlayer>> { }
-
 /**
  * Used to get names of haxball events.
  */
