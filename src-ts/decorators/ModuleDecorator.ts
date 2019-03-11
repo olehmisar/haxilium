@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
 function noop() { }
-export function Module(): ClassDecorator {
+export function ModuleDecorator(): ClassDecorator {
     return noop
 }

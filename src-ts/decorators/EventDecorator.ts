@@ -5,7 +5,7 @@ import { capitalize } from '../utils';
 const metadataKey = Symbol(`room:events`)
 type PropNameWithEvent = [string, string]
 
-export function Event(event: string): PropertyDecorator {
+export function EventDecorator(event: string): PropertyDecorator {
     return (target: object, propName: string | symbol) => {
         if (typeof propName === 'symbol')
             throw new TypeError("Decorator 'Event' cannot decorate a property with Symbol key")

@@ -8,8 +8,8 @@ export default function haxilium<TPlayer extends Player>(config: RoomConfig<TPla
 }
 
 export { CommandDecorator as Command } from './decorators/CommandDecorator';
-export { Event } from './decorators/Event';
-export { Module } from './decorators/Module';
+export { EventDecorator as Event } from './decorators/EventDecorator';
+export { ModuleDecorator as Module } from './decorators/ModuleDecorator';
 export { UnknownCommandError } from './errors';
 export { Scores } from './interfaces/Scores';
 export { Team } from './interfaces/Team';

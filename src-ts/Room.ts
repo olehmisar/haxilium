@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { getModuleCommands } from './decorators/CommandDecorator';
-import { getPropNamesWithEvents } from './decorators/Event';
+import { getPropNamesWithEvents } from './decorators/EventDecorator';
 import { DelegatedRoom } from './DelegatedRoom';
 import { UnknownCommandError } from './errors';
 import { Module } from './interfaces/Module';
