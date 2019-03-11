@@ -4,7 +4,7 @@ import { Player } from './models/Player';
 import { Room } from './Room';
 
 
-export default function haxilium<TPlayer extends Player>(config: RoomConfig<TPlayer>) {
+export default function haxilium<TPlayer extends Player, TRoles extends { [role: string]: number }>(config: RoomConfig<TPlayer, TRoles>) {
     return new Room(config)
 }
 
@@ -13,7 +13,7 @@ export interface HaxballEvents<TPlayer extends Player> extends Partial<HaxballEv
 export { CommandDecorator as Command } from './decorators/CommandDecorator';
 export { EventDecorator as Event } from './decorators/EventDecorator';
 export { ModuleDecorator as Module } from './decorators/ModuleDecorator';
-export { UnknownCommandError } from './errors';
+export { AccessToCommandDeniedError, UnknownCommandError } from './errors';
 export { Scores } from './interfaces/Scores';
 export { Team } from './interfaces/Team';
 export { Vector } from './interfaces/Vector';

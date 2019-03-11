@@ -9,12 +9,12 @@ import { Player } from './models/Player';
 import { Entries, isPlayerObject, Keys } from './utils';
 
 
-export abstract class DelegatedRoom<TPlayer extends Player> extends HaxballEvents<TPlayer> {
+export abstract class DelegatedRoom<TPlayer extends Player, TRoles extends { [role: string]: number }> extends HaxballEvents<TPlayer> {
     private room: any
     private players: { [id: number]: TPlayer } = {}
     protected Player: new (...args: any[]) => TPlayer
 
-    constructor(config: RoomConfig<TPlayer>) {
+    constructor(config: RoomConfig<TPlayer, TRoles>) {
         super()
         this.room = window.HBInit(config)
         // TODO: remove type assertion. CRITICAL TYPE CHECK ERROR!

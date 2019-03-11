@@ -1,20 +1,26 @@
 import 'reflect-metadata';
-import { CommandFunction, getModuleCommands } from './decorators/CommandDecorator';
+import { getModuleCommands } from './decorators/CommandDecorator';
 import { getPropNamesWithEvents } from './decorators/EventDecorator';
 import { DelegatedRoom } from './DelegatedRoom';
-import { UnknownCommandError } from './errors';
+import { AccessToCommandDeniedError, UnknownCommandError } from './errors';
 import { Module } from './interfaces/Module';
 import { RoomConfig } from './interfaces/RoomConfig';
+import { Command } from './models/Command';
 import { Player } from './models/Player';
-import { capitalize, ConstructorOf, MetadataParamTypes, parseCommandString } from './utils';
+import { capitalize, ConstructorOf, MetadataParamTypes, parseAccessString, parseCommandString } from './utils';
 
 
-export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
-    private modules: Module<TPlayer>[] = []
-    private commandLookup: { [name: string]: CommandFunction<TPlayer> } = {}
+export class Room<TPlayer extends Player, TRoles extends { [role: string]: number } = { [role: string]: number }> extends DelegatedRoom<TPlayer, TRoles> {
+    private readonly modules: Module<TPlayer>[] = []
+    private readonly commands: { [name: string]: Command<TPlayer, TRoles> } = {}
+    private readonly roles: TRoles
+    private readonly getRoles: NonNullable<RoomConfig<TPlayer, TRoles>['getRoles']>
 
-    constructor(config: RoomConfig<TPlayer>) {
+    constructor(config: RoomConfig<TPlayer, TRoles>) {
         super(config)
+        this.roles = config.roles || {} as TRoles
+        this.getRoles = config.getRoles || (() => [])
+
         this.createModules(config.modules || [])
         this.createPlayerEvents()
     }
@@ -27,11 +33,14 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
         const args = parseCommandString(cmd)
         const name = args[0] = args[0].toLowerCase()
 
-        const command = this.commandLookup[name]
+        const command = this.commands[name]
         if (!command)
             throw new UnknownCommandError(name)
 
-        command(player, args)
+        if (!command.hasAccess(this.getRoles(player)))
+            throw new AccessToCommandDeniedError(name)
+
+        return command.execute(player, args)
     }
 
     protected executeCallbacks(event: string, args: any[]) {
@@ -53,18 +62,19 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
 
     private createCommands(module: Module<TPlayer>, ModuleClass: ConstructorOf<Module<TPlayer>>) {
         const commands = getModuleCommands(ModuleClass)
-        for (const [key, { names }] of commands) {
+        for (const [key, { names, access }] of commands) {
             // TODO: replace this with compile time check.
             if (names.length === 0)
                 throw new TypeError(`Cannot create command in ${ModuleClass.name} module. command.names is an empty array`)
 
-            for (let name of names) {
-                name = name.toLowerCase()
-                if (this.commandLookup[name])
+            const hasAccessFunc = access === undefined ? () => true : parseAccessString(access, this.roles)
+            // TODO: remove type assertion.
+            const command = new Command<TPlayer, TRoles>(names, hasAccessFunc, (module as any)[key].bind(module))
+            for (const name of command.names) {
+                if (this.commands[name])
                     throw new TypeError(`Cannot create command in ${ModuleClass.name} module. Command with ${name} name already exists`)
 
-                // TODO: remove type assertion.
-                this.commandLookup[name] = (<any>module)[key].bind(module)
+                this.commands[name] = command
             }
         }
     }

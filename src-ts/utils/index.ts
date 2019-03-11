@@ -23,7 +23,7 @@ export type Keys<T> = (keyof T)[]
 export type ArrayValuesType<T extends any[]> = T extends (infer U)[] ? U : never
 export type UnionToIntersection<U> =
     (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never
-
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
 export type MetadataParamTypes<T = undefined> = undefined | (
     | T
@@ -36,4 +36,5 @@ export type MetadataParamTypes<T = undefined> = undefined | (
     | undefined
 )[]
 
+export * from './parseAccessString';
 export * from './parseCommandString';
