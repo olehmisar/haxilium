@@ -1,6 +1,5 @@
-export class UnknownCommandError {
-    constructor(readonly commandName: string) { }
-    toString() {
-        return `Unknown command ${this.commandName}`
+export class UnknownCommandError extends Error {
+    constructor(commandName: string) {
+        super(`Unknown command ${commandName}`)
     }
 }
