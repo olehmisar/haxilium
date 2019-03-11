@@ -1,29 +1,34 @@
 import 'reflect-metadata';
 import { Module } from '../interfaces/Module';
 import { Player } from '../models/Player';
-import { ConstructorOf } from '../utils';
+import { ArrayValuesType, ConstructorOf } from '../utils';
 
 
-interface CommandDecoratorOptions {
+
+export interface CommandOptions {
     readonly names: string[]
 }
 
-export function CommandDecorator(name: string): MethodDecorator
-export function CommandDecorator(names: string[]): MethodDecorator
-export function CommandDecorator(nameOrNames: string | string[]): MethodDecorator {
+export type CommandFunction<TPlayer extends Player> = (player: TPlayer, args: string[]) => any
+type CommandMethodDescriptor<TPlayer extends Player> = TypedPropertyDescriptor<CommandFunction<TPlayer>>
+type CommandMethodDecorator = <TPlayer extends Player>(target: Module<TPlayer>, key: string | symbol, descriptor: CommandMethodDescriptor<TPlayer>) => CommandMethodDescriptor<TPlayer> | void
+
+export function CommandDecorator(name: string): CommandMethodDecorator
+export function CommandDecorator(names: string[]): CommandMethodDecorator
+export function CommandDecorator(nameOrNames: string | string[]): CommandMethodDecorator {
     const names = Array.isArray(nameOrNames) ? nameOrNames : [nameOrNames]
 
     return (target, key) => {
-        const commands: [string | symbol, CommandDecoratorOptions][] | undefined = Reflect.getMetadata('haxball-room:commands', target)
-        const data: [string | symbol, CommandDecoratorOptions] = [key, { names }]
+        const commands: [string | symbol, CommandOptions][] | undefined = Reflect.getMetadata('haxball-room:commands', target)
+        const command: ArrayValuesType<NonNullable<typeof commands>> = [key, { names }]
         if (commands) {
-            commands.push(data)
+            commands.push(command)
         } else {
-            Reflect.defineMetadata('haxball-room:commands', [data], target)
+            Reflect.defineMetadata('haxball-room:commands', [command], target)
         }
     }
 }
 
-export function getModuleCommands<TPlayer extends Player>(ModuleClass: ConstructorOf<Module<TPlayer>>): [string | symbol, CommandDecoratorOptions][] {
+export function getModuleCommands<TPlayer extends Player>(ModuleClass: ConstructorOf<Module<TPlayer>>): [string | symbol, CommandOptions][] {
     return Reflect.getMetadata('haxball-room:commands', ModuleClass.prototype) || []
 }
