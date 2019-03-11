@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { Module } from '../interfaces/Module';
+import { Player } from '../models/Player';
 import { ConstructorOf } from '../utils';
 
 
@@ -23,6 +24,6 @@ export function CommandDecorator(nameOrNames: string | string[]): MethodDecorato
     }
 }
 
-export function getModuleCommands(ModuleClass: ConstructorOf<Module>): [string | symbol, CommandDecoratorOptions][] {
+export function getModuleCommands<TPlayer extends Player>(ModuleClass: ConstructorOf<Module<TPlayer>>): [string | symbol, CommandDecoratorOptions][] {
     return Reflect.getMetadata('haxball-room:commands', ModuleClass.prototype) || []
 }

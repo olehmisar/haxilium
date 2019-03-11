@@ -10,7 +10,7 @@ import { capitalize, ConstructorOf, MetadataParamTypes, parseCommandString } fro
 
 
 export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
-    private modules: Module[] = []
+    private modules: Module<TPlayer>[] = []
     private commandLookup: { [name: string]: (player: TPlayer, args: string[]) => any } = {}
 
     constructor(config: RoomConfig<TPlayer>) {
@@ -51,7 +51,7 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
         if (returns.some(v => v === false)) return false
     }
 
-    private createCommands(module: Module, ModuleClass: ConstructorOf<Module>) {
+    private createCommands(module: Module<TPlayer>, ModuleClass: ConstructorOf<Module<TPlayer>>) {
         const commands = getModuleCommands(ModuleClass)
         for (const [key, { names }] of commands) {
             if (names.length === 0)
@@ -84,19 +84,19 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
         }
     }
 
-    private createModules(ModuleClasses: ConstructorOf<Module>[]) {
+    private createModules(ModuleClasses: ConstructorOf<Module<TPlayer>>[]) {
         for (const ModuleClass of ModuleClasses) {
             this.createOrGetModule(ModuleClass)
         }
     }
 
-    private createOrGetModule(ModuleClass: ConstructorOf<Module>): Module {
+    private createOrGetModule(ModuleClass: ConstructorOf<Module<TPlayer>>): Module<TPlayer> {
         let module = this.modules.find(module => module instanceof ModuleClass)
         if (module) return module
 
-        const DependencyClasses: MetadataParamTypes<typeof Room | ConstructorOf<Module>> = Reflect.getMetadata('design:paramtypes', ModuleClass)
+        const DependencyClasses: MetadataParamTypes<typeof Room | ConstructorOf<Module<TPlayer>>> = Reflect.getMetadata('design:paramtypes', ModuleClass)
 
-        const dependencies: (Room<TPlayer> | Module)[] = []
+        const dependencies: (Room<TPlayer> | Module<TPlayer>)[] = []
         for (const DependencyClass of DependencyClasses || []) {
             if (DependencyClass === Number ||
                 DependencyClass === String ||

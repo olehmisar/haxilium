@@ -15,6 +15,6 @@ export interface RoomConfig<TPlayer extends Player> {
         lon?: number
     }
     token?: string,
-    modules?: ConstructorOf<Module>[],
+    modules?: ConstructorOf<Module<TPlayer>>[],
     Player?: ConstructorOf<TPlayer>,
 }
