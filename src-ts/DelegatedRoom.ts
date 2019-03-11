@@ -17,6 +17,7 @@ export abstract class DelegatedRoom<TPlayer extends Player> extends HaxballEvent
     constructor(config: RoomConfig<TPlayer>) {
         super()
         this.room = window.HBInit(config)
+        // TODO: remove type assertion. CRITICAL TYPE CHECK ERROR!
         this.Player = config.Player || <any>Player
 
         const events = Object.keys(new HaxballEvents()) as Keys<HaxballEvents<TPlayer>>

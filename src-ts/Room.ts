@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { getModuleCommands } from './decorators/CommandDecorator';
+import { CommandFunction, getModuleCommands } from './decorators/CommandDecorator';
 import { getPropNamesWithEvents } from './decorators/EventDecorator';
 import { DelegatedRoom } from './DelegatedRoom';
 import { UnknownCommandError } from './errors';
@@ -11,7 +11,7 @@ import { capitalize, ConstructorOf, MetadataParamTypes, parseCommandString } fro
 
 export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
     private modules: Module<TPlayer>[] = []
-    private commandLookup: { [name: string]: (player: TPlayer, args: string[]) => any } = {}
+    private commandLookup: { [name: string]: CommandFunction<TPlayer> } = {}
 
     constructor(config: RoomConfig<TPlayer>) {
         super(config)
@@ -54,6 +54,7 @@ export class Room<TPlayer extends Player> extends DelegatedRoom<TPlayer> {
     private createCommands(module: Module<TPlayer>, ModuleClass: ConstructorOf<Module<TPlayer>>) {
         const commands = getModuleCommands(ModuleClass)
         for (const [key, { names }] of commands) {
+            // TODO: replace this with compile time check.
             if (names.length === 0)
                 throw new TypeError(`Cannot create command in ${ModuleClass.name} module. command.names is an empty array`)
 
