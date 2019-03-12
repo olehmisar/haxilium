@@ -26,10 +26,8 @@
   },
   "homepage": "https://github.com/olegmisar/haxilium.js#readme",
   "dependencies": {
-    "assert": "^1.4.1",
     "deep-freeze": "0.0.1",
-    "reflect-metadata": "^0.1.12",
-    "setimmediate": "^1.0.5"
+    "reflect-metadata": "^0.1.12"
   },
   "devDependencies": {
     "@babel/core": "^7.1.2",
