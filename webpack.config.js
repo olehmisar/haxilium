@@ -1,7 +1,7 @@
 const path = require('path')
 
 module.exports = {
-    entry: './src-ts/index.ts',
+    entry: './src/index.ts',
     mode: 'development',
     resolve: {
         extensions: ['.ts', '.js']
@@ -18,7 +18,6 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'bundle.dev.js',
-        // TODO: re-enable
-        // libraryTarget: 'umd',
+        libraryTarget: 'umd',
     }
 }
