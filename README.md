@@ -11,7 +11,7 @@ room.onPlayerJoin = function (player: Player) {
 }
 ```
 
-## Installation
+# Installation
 Use following command to install Haxilium:
 ```shell
 npm install haxilium
@@ -19,10 +19,10 @@ npm install haxilium
 That's all!
 
 
-## Getting started
+# Getting started
 Haxilium provides the same API as [Haxball Headless API] but also adds modules and custom `Player` models.
 
-### Create a room
+## Create a room
 Use `haxilium(config: RoomConfig)` to create a room:
 ```ts
 import haxilium from 'haxilium'
@@ -37,10 +37,10 @@ const room = haxilium({
 ```
 The above code will create a __public__ haxball room with "__Haxilium Room__" name , "__Haxilium Bot__" player(bot) name, maximum amount of players of __10__ and with geolocation of __England__.
 
-### `RoomConfig`
+## `RoomConfig`
 `RoomConfig` is the same as in [Haxball Headless API]. You can look at description of room config [here][Haxball Headless API room config].
 
-### Custom `Player` model
+## Custom `Player` model
 In addition, Haxilium provides more `RoomConfig` properties:
 - `Player` - class which extends `haxilium.Player` class. To fire events when any player's field is changed, you have to decorate it with `Event(event: string)` decorator
 - `roles` - an object of roles. E.g., `{ ingame: 0, moderator: 1, admin: 2 }`
@@ -77,7 +77,7 @@ room.onPlayerCustomFieldChange = function (player: Player) {
 ```
 
 
-### Attach callbacks
+## Attach callbacks
 [Full list of events][Haxball Headless API events]
 
 To attach callback to, for example, `playerJoin` event, use the following code:
@@ -102,7 +102,7 @@ room.onPlayerJoin = ''
 To see full list of events visit [this page][Haxball Headless API events].
 
 
-### Improved `Room.getPlayerList()`
+## Improved `Room.getPlayerList()`
 There are 3 improvements in `Room.getPlayerList()` method:
 1. It will never return player with ID = 0. In other words, it will never return host player
 2. You can sort players by team by passing an array of team IDs as first argument:
@@ -125,7 +125,7 @@ There are 3 improvements in `Room.getPlayerList()` method:
     ```
 
 <!--
-### Add commands
+## Add commands
 TODO: describe command making better.
 
 Creating commands is very simple with Haxilium. Just use `addCommand(command: CommandObject)`. `CommandObject` has only 3 properties:
@@ -164,7 +164,7 @@ room.on('playerChat', function (player, message) {
 __NOTE__ that we pass a `string` to the `executeCommand(player, command)`. For example: `executeCommand(player, 'add 2 5')`. After that, the command will be parsed and passed to the `execute(player, args)` function. `args` is an __array of strings__. First argument `args[0]` is the name of the command. In our case, `args[0] === 'add'`, `args[1] === '2'` and `args[2] === '5'`.
 
 
-### Player roles
+## Player roles
 When we are going to make a big project, we want to make roles for players. For example, we don't want `!kick` command to be available for every player but only for admins. So, we introduce roles in our project. All roles are specified in config under the `roles` field and are an array similar to this: `['player', 'admin']`. Roles array is an hierarchy where roles that has smaller index are lower in the hierarchy table. In our array `'player'` < `'admin'` because `'player'` has smaller index than `'admin'` in `['player', 'admin']` array. To calculate role for every player we specify `getRole(player: PlayerObject)` in config:
 ```ts
 import haxilium from 'haxilium'
@@ -208,7 +208,7 @@ Also, you can make more complicated `access` strings. Available operators are: `
 - `'<player || (>player && <admin)'` will allow command execution only for players whose role is less `(<)` than `'player'` or `(||)` greater `(>)` than `'player'` and `(&&)` less `(<)` than `'admin'`. Notice parenthesis.
 
 
-### Get commands
+## Get commands
 It is useful to retrieve commands when we need them. For example, we are going to make user-friendly bot that has `!help` command in it. We use `getCommand(name: string)` to get command by name and `getCommands(filterFn: function)` to get all commands which match `filterFn` function:
 ```ts
 // Add '!afk' command.
@@ -244,10 +244,10 @@ room.addCommand({
 Now, if player types `!help afk` in chat, he will get `'Toggle your afk status'` help message. And when he writes just `!help` command he will get full list of commands which provide help messages. -->
 
 
-## Module system
+# Module system
 
 
-### Introduction
+## Introduction
 Module is a class which is decorated with `Module()` decorator and it defines callbacks and commands as its methods:
 ```ts
 import { Module, Player } from 'haxilium'
@@ -277,7 +277,7 @@ const room = haxilium({
 You can also define methods, fields and other stuff in the module class but I recommend not to use names which start with `on` to avoid collisions with callbacks.
 
 
-### Access room in a module
+## Access room in a module
 To access the room object in the module, you have to define a constructor, which accepts a `Room` argument:
 ```ts
 import { Module, Room, Player } from 'haxilium'
@@ -347,7 +347,7 @@ class GreetingModule {
 ```
 
 
-### Add command
+## Add command
 To add a command, decorate a method with `Command(names: string|string[])` decorator. The method must accept two parameters:
 - `player: Player` - player who executes the command
 - `args: string[]` - an array of arguments which are passed to the `Room.executeCommand()` (it will be explained later)
@@ -396,7 +396,7 @@ class LoggingModule {
 ```
 
 
-### Execute command
+## Execute command
 To execute command, use `room.executeCommand(player: Player, command: string)`. Command will be parsed and passed to the appropriative method. Examples of parsed commands:
 - `printlogs 1` => `['printlogs', '1']`
 - `printlogs 1 2` => `['printlogs', '1', '2']`
@@ -440,7 +440,7 @@ room.onPlayerChat = function (player: Player, message: string) {
 ```
 
 
-### Limit access to the command
+## Limit access to the command
 Often you want to limit access for specific commands. For example, only admins can kick players. So, you have to define roles and which player belongs to each role and then pass a second argument (boolean expression string) to the `Command()` decorator:
 ```ts
 import haxilium, { Module, Command, Room, Player } from 'haxilium'
@@ -515,7 +515,7 @@ room.onPlayerChat = function (player: Player, message: string) {
 ```
 
 
-### Afk module example
+## Afk module example
 Below you can see example of an afk module:
 ```ts
 import haxilium, { Module, Command, Event, Room, Player as PlayerBase } from 'haxilium'
