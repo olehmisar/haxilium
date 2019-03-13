@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/olegmisar/haxilium.js.git"
+    "url": "git+https://github.com/olegmisar/haxilium.git"
   },
   "keywords": [
     "haxilium",
@@ -22,9 +22,9 @@
   "author": "Misarosh Oleh <olegmisar@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/olegmisar/haxilium.js/issues"
+    "url": "https://github.com/olegmisar/haxilium/issues"
   },
-  "homepage": "https://github.com/olegmisar/haxilium.js#readme",
+  "homepage": "https://github.com/olegmisar/haxilium#readme",
   "dependencies": {
     "@types/deep-freeze": "^0.1.1",
     "@types/reflect-metadata": "^0.1.0",
