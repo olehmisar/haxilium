@@ -10,7 +10,7 @@ import { Player } from './models/Player';
 import { capitalize, ConstructorOf, MetadataParamTypes, parseAccessString, parseCommandString } from './utils';
 
 
-export class Room<TPlayer extends Player, TRoles extends { [role: string]: number } = { [role: string]: number }> extends DelegatedRoom<TPlayer, TRoles> {
+export class Room<TPlayer extends Player = Player, TRoles extends { [role: string]: number } = { [role: string]: number }> extends DelegatedRoom<TPlayer, TRoles> {
     private readonly modules: Module<TPlayer>[] = []
     private readonly commands: { [name: string]: Command<TPlayer, TRoles> } = {}
     private readonly roles: TRoles
