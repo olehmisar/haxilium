@@ -87,7 +87,7 @@ room.onPlayerJoin = function (player: Player) {
 }
 ```
 
-When we don't want to use the callback anymore we can `delete` it or set it to any falsy value:
+When you don't want to use the callback anymore you can `delete` it or set it to any falsy value:
 ```ts
 // Recommended.
 delete room.onPlayerJoin
@@ -350,7 +350,7 @@ class GreetingModule {
 ## Add command
 To add a command, decorate a method with `Command(names: string|string[])` decorator. The method must accept two parameters:
 - `player: Player` - player who executes the command
-- `args: string[]` - an array of arguments which are passed to the `Room.executeCommand()` (it will be explained later)
+- `args: string[]` - an array of arguments
 
 Example:
 ```ts
@@ -469,7 +469,7 @@ const room = haxilium({
 })
 ```
 
-Now, `kick` command will be able only to players who belongs to `admin` role. Usage:
+Now, `kick` command will be available only to players who belongs to `admin` role. Usage:
 - `kick 1` - kick a player with id `1`
 - `kick 1 "very long afk"` - kick a player with id `1` and specify "very long afk" reason
 
