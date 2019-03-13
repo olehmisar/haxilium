@@ -1,16 +1,17 @@
 # Haxilium
-Haxball Headless API Framework for easy and organized development.
+Haxball Headless API Framework for easy and organized development. Haxilium requires TypeScript to work. This provides strict typechecking and helps to avoid a lot of bugs on compile time.
 
-```js
-import haxilium from 'haxilium'
+```ts
+import haxilium, { Player } from 'haxilium'
 
 const room = haxilium({ roomName: 'Haxilium Room' })
-room.on('ready', function () {
-    console.log('Hello, World!')
-})
+
+room.onPlayerJoin = function (player: Player) {
+    room.sendChat(`Hello, ${player.name}!`)
+}
 ```
 
-## Installation
+# Installation
 Use following command to install Haxilium:
 ```shell
 npm install haxilium
@@ -18,12 +19,12 @@ npm install haxilium
 That's all!
 
 
-## Getting started
-Haxilium is very similar to the original [Haxball Headless API] because it is a thin wrapper over it. That's why it is simple to get started.
+# Getting started
+Haxilium provides the same API as [Haxball Headless API] but also adds modules and custom `Player` models.
 
-### Create a room
+## Create a room
 Use `haxilium(config: RoomConfig)` to create a room:
-```js
+```ts
 import haxilium from 'haxilium'
 
 const room = haxilium({
@@ -36,215 +37,96 @@ const room = haxilium({
 ```
 The above code will create a __public__ haxball room with "__Haxilium Room__" name , "__Haxilium Bot__" player(bot) name, maximum amount of players of __10__ and with geolocation of __England__.
 
-#### `RoomConfig`
+## `RoomConfig`
 `RoomConfig` is the same as in [Haxball Headless API]. You can look at description of room config [here][Haxball Headless API room config].
 
-#### `PlayerObject` extension
+## Custom `Player` model
 In addition, Haxilium provides more `RoomConfig` properties:
-- `player: object`
-- `roles: string[]`
-- `getRole(player: PlayerObject): function`
+- `Player` - class which extends `haxilium.Player` class. To fire events when any player's field is changed, you have to decorate it with `Event(event: string)` decorator
+- `roles` - an object of roles. E.g., `{ ingame: 0, moderator: 1, admin: 2 }`
+- `getRoles(player: Player)` - a function which returns an array of strings: all `roles` of the `player`
 
-More info about `roles` and `getRole()` you can find in [command system section](#player-roles). `player` property is an object where you put additional [`PlayerObject`][Haxball Headless API player object] properties where __key__ is __name__ of property and __value__ is __options__ of property:
-```js
+You will need roles to limit access to specific commands. Command creation will be explained later.
+
+Example:
+```ts
+import haxilium, { Event, Team, Player as PlayerBase } from 'haxilium'
+
+class Player extends PlayerBase {
+    @Event('playerCustomFieldChange') customField = false
+}
+
 const room = haxilium({
-    roomName: 'Haxilium room',
-    player: {
-        afk: {
-            // Set default value as 'false'.
-            default: false,
-            // Add 'setPlayerAfk(id, afk)' to the room object.
-            method: 'setPlayerAfk',
-            // Fire a 'playerAfkChange' event when afk status of some player changes.
-            event: 'playerAfkChange',
-            // Define setter. Notice that 'return false'.
-            set(player, afk) {
-                // 'return false' will not fire 'playerAfkChange' event.
-                if (player.afk === afk) return false
-                player.afk = afk
-            }
-        }
-    }
+    Player: Player,
+    roles: { customRole: 0, ingame: 1, admin: 2 }
+    getRoles: (player: Player) => [
+        player.admin ? 'admin' : '',
+        player.team !== Team.Spect ? 'ingame' : '',
+        player.customField ? 'customRole': '',
+    ]
 })
-```
 
-In the above code we see that we've made additional `afk` property for every player. We set `false` as default value for `afk` because we assume that player is not afk by default:
-```js
-default: false
-```
-and we will use it like this:
-```js
-room.on('playerAfkChange', function (player) {
-    console.log(player.name, player.afk)
-})
-```
+room.onPlayerJoin = function (player: Player) {
+    // This line of code will fire 'playerCustomFieldChange' event.
+    player.customField = true
+}
 
-Then we define name of the method which will be attached to the room object:
-```js
-method: 'setPlayerAfk'
-```
-and we will use it like this:
-```js
-this.setPlayerAfk(1, true)
-```
-
-After that we set event name which will be fired when some player's afk status is changed:
-```js
-event: 'playerAfkChange'
-```
-usage:
-```js
-room.on('playerAfkChange', function (player) {
-    console.log(player.name, player.afk)
-})
-```
-
-Lastly, we define actual setter which sets player property:
-```js
-set(player, afk) {
-    // 'return false' will not fire 'playerAfkChange' event.
-    if (player.afk === afk) return false
-    player.afk = afk
+room.onPlayerCustomFieldChange = function (player: Player) {
+    console.log('player.customField was changed')
 }
 ```
-Notice that `return false` code. We `return false` if afk status of player is the same as we want to set. `return false` means that we don't want to call callbacks. You can omit `return false`. Or you can `return false` based on another condition and callbacks will not be called.
-
-Imagine you have to write 2 or 3 or 10 or even 100 additional player properties. It will be cumbersome to write so much code. That's why Haxilium provides shortcuts. The following snippet is equal to above 9 lines of code:
-```js
-const room = haxilium({
-    roomName: 'Haxilium room',
-    player: {
-        afk: false
-    }
-})
-```
-You just define name of the property and its default value. Other stuff is made behind the scenes. `setPlayerAfk` and `playerAfkChange` are assumed as default method and event names respectively.
-
-The next code sample is an example of using `afk` property. We will toggle player's `afk` property when he writes `'afk'` in chat. In this code we use callbacks and methods. If you are not familiar with them you can skip this code snippet.
-
-_Don't use this code in your real project because there is a better solution using [commands](#add-commands)._
-```js
-room.on('playerChat', function (player, message) {
-    if (message === 'afk') {
-        // Use `setPlayerAfk()` method.
-        if (player.afk) {
-            this.setPlayerAfk(player.id, false)
-        } else
-            this.setPlayerAfk(player.id, true)
-        }
-    }
-})
-
-// Register callback for 'playerAfkChange()' event.
-room.on('playerAfkChange', function (player) {
-    // Notify players about someone is (is not) afk.
-    if (player.afk) this.sendChat(player.name + ' is afk')
-    else            this.sendChat(player.name + ' is not afk')
-})
-```
 
 
-### Attach callbacks
+## Attach callbacks
 [Full list of events][Haxball Headless API events]
 
-To attach callback to the event we use `on(event: string, callbackFn: function)`. For example, a `playerJoin` event will be fired when a player joins the room. We register a callback that notifies us when some player joins the room:
-```js
-room.on('playerJoin', function (player) {
+To attach callback to, for example, `playerJoin` event, use the following code:
+```ts
+room.onPlayerJoin = function (player: Player) {
     console.log(player.name + ' has joined')
-})
-```
-
-__NOTE__ that event name is __not__ sensitive to different styles of cases. In other words, `player-join`, `PlayerJoin` and `playerJoin` is the same event but `pLayerJOin`, `PlAyerjoin` and `plAYerJoin` are different. There must be clear difference between them. I recommend to use `camelCase` for event names and I will use it in the next sections.
-
-Ok, let's add one more callback which will greet player when he joins the room:
-```js
-room.on('playerJoin', function (player) {
-    // 'this' refers to the 'room' object. Don't use 'room' inside of callbacks.
-    this.sendChat('Welcome, ' + player.name)
-})
-```
-
-In result, we have two registered callbacks. First one will `console.log()` that player has joined the room. Second callback will greet that player.
-
-__NOTE__ that registration __order__ of callbacks __matters__. This means that __second callback__ will be called __after__ __first one__, __third__ will be called __after__ __second__ etc.
-
-Also we can pass an array of callbacks to register them in one go:
-```js
-function cb0() {
-    console.log('This message is shown first')
 }
-
-function cb1() {
-    console.log('This message is shown second')
-}
-
-room.on('playerJoin', [cb0, cb1])
 ```
 
-When we don't want to use a callback anymore we can detach it:
-```js
-// 'room.on()' returns 'detach()' function which detaches just attached callback.
-const detach = room.on('playerJoin', function (player) {
-    console.log(player.name + ' has joined')
-})
-
-...
-
-// Later in the code we detach callback and will not get 'player has joined' notifications anymore.
-detach()
+When we don't want to use the callback anymore we can `delete` it or set it to any falsy value:
+```ts
+// Recommended.
+delete room.onPlayerJoin
+// This is NOT recommended.
+room.onPlayerJoin = null
+room.onPlayerJoin = undefined
+room.onPlayerJoin = false
+room.onPlayerJoin = 0
+room.onPlayerJoin = ''
 ```
 
 To see full list of events visit [this page][Haxball Headless API events].
 
 
-### Create methods
-[Full list of room methods][Haxball Headless API methods]
-
-Besides default methods and methods which are automatically created for us by Haxilium(e.g., `setPlayerAfk()` from the [above section](#playerobject-extension)), we can create our own methods. We use `method(name: string, methodFn: function)` to attach `methodFn` function to the room under the `name` name. In the following code we create function which adds `'INFO: '` prefix to the message that we want to send to the player:
-```js
-room.method('sendChatInfo', function (message, playerID) {
-    // 'this' refers to the 'room' object. Don't use 'room' inside of callbacks, methods etc.
-    // Send prefixed message.
-    this.sendChat('INFO: ' + message, playerID)
-})
-```
-
-Then we can use `sendChatInfo(message: string, playerID: int)`. If player types `'get info'` in a chat we will send some info message to him:
-```js
-room.on('playerChat', function (player, message) {
-    if (message === 'get info') {
-        // Sends "INFO: This is info message" to this player.
-        this.sendChatInfo('This is info message', player.id)
-    }
-})
-```
-To see full list of methods visit [this page][Haxball Headless API methods].
-
-
-### Improved `getPlayerList()`
-There are 3 improvements in `getPlayerList()` method:
-1. It will never return player with ID = 0. In other words, it will never return bot object
-2. You can sort players by team by passing array of team IDs as first argument:
-    ```js
-    const teams = this.getPlayerList([1, 2, 0])
+## Improved `Room.getPlayerList()`
+There are 3 improvements in `Room.getPlayerList()` method:
+1. It will never return player with ID = 0. In other words, it will never return host player
+2. You can sort players by team by passing an array of team IDs as first argument:
+    ```ts
+    // Team.Red, Team.Blue and Team.Spect are 1, 2, 0 respectively.
+    const teams = room.getPlayerList([Team.Red, Team.Blue, Team.Spect])
     const red = teams[0]
     const blue = teams[1]
     const spect = teams[2]
     ```
     Or use ES6 destructuring assignment:
-    ```js
-    const [red, blue, spect] = this.getPlayerList([1, 2, 0])
+    ```ts
+    const [red, blue, spect] = room.getPlayerList([Team.Red, Team.Blue, Team.Spect])
     ```
     In result, `red` will contain only players from red team, `blue` will contain only players from blue team and `spect` will contain only spectators.
 3. You can filter out players by passing filter object as first argument(or second argument if you also want to sort players by team):
-    ```js
-    const admins = this.getPlayerList({ admin: true })
-    const [redAdmins, blueAdmins] = this.getPlayerList([1, 2], { admin: true })
+    ```ts
+    const admins = room.getPlayerList({ admin: true })
+    const [redAdmins, blueAdmins] = room.getPlayerList([Team.Red, Team.Blue], { admin: true })
     ```
 
-
-### Add commands
-<!-- TODO: describe command making better. -->
+<!--
+## Add commands
+TODO: describe command making better.
 
 Creating commands is very simple with Haxilium. Just use `addCommand(command: CommandObject)`. `CommandObject` has only 3 properties:
 - `names: string[]` - names of command
@@ -252,7 +134,7 @@ Creating commands is very simple with Haxilium. Just use `addCommand(command: Co
 - `access: string` - boolean expression which determines if player can or cannot execute this command. Optional. [More info](#player-roles)
 
 We will make command that adds two numbers provided by player. For example: `add 2 5` will send `'2 + 5 = 7'` message to the player. Now let's look at code:
-```js
+```ts
 room.addCommand({
     names: ['add'],
     execute(player, args) {
@@ -269,7 +151,7 @@ room.addCommand({
 ```
 
 Then we want players to execute this command. We use `executeCommand(player, command)` to do this:
-```js
+```ts
 room.on('playerChat', function (player, message) {
     if (message[0] === '!') {
         // Remove '!' symbol.
@@ -282,9 +164,9 @@ room.on('playerChat', function (player, message) {
 __NOTE__ that we pass a `string` to the `executeCommand(player, command)`. For example: `executeCommand(player, 'add 2 5')`. After that, the command will be parsed and passed to the `execute(player, args)` function. `args` is an __array of strings__. First argument `args[0]` is the name of the command. In our case, `args[0] === 'add'`, `args[1] === '2'` and `args[2] === '5'`.
 
 
-### Player roles
+## Player roles
 When we are going to make a big project, we want to make roles for players. For example, we don't want `!kick` command to be available for every player but only for admins. So, we introduce roles in our project. All roles are specified in config under the `roles` field and are an array similar to this: `['player', 'admin']`. Roles array is an hierarchy where roles that has smaller index are lower in the hierarchy table. In our array `'player'` < `'admin'` because `'player'` has smaller index than `'admin'` in `['player', 'admin']` array. To calculate role for every player we specify `getRole(player: PlayerObject)` in config:
-```js
+```ts
 import haxilium from 'haxilium'
 
 const room = haxilium({
@@ -308,7 +190,7 @@ const room = haxilium({
 ```
 
 Now let's define `!kick` command. We use `access` property on `CommandObject` to limit access to this command:
-```js
+```ts
 room.addCommand({
     names: ['kick'],
     // For all players whose role is greater or equal (>=) to 'admin'
@@ -326,9 +208,9 @@ Also, you can make more complicated `access` strings. Available operators are: `
 - `'<player || (>player && <admin)'` will allow command execution only for players whose role is less `(<)` than `'player'` or `(||)` greater `(>)` than `'player'` and `(&&)` less `(<)` than `'admin'`. Notice parenthesis.
 
 
-### Get commands
+## Get commands
 It is useful to retrieve commands when we need them. For example, we are going to make user-friendly bot that has `!help` command in it. We use `getCommand(name: string)` to get command by name and `getCommands(filterFn: function)` to get all commands which match `filterFn` function:
-```js
+```ts
 // Add '!afk' command.
 room.addCommand({
     names: ['afk'],
@@ -359,149 +241,333 @@ room.addCommand({
 })
 ```
 
-Now, if player types `!help afk` in chat, he will get `'Toggle your afk status'` help message. And when he writes just `!help` command he will get full list of commands which provide help messages.
+Now, if player types `!help afk` in chat, he will get `'Toggle your afk status'` help message. And when he writes just `!help` command he will get full list of commands which provide help messages. -->
 
 
-## Module system
-
-### Introduction
-Haxilium provides module system. Module is an object which contains following fields:
-- `name` - unique name of the module
-- `player` - an object containing custom player's properties. [More info](#playerobject-extension)
-- `defaultState` - a module state object. Put all module related variables here. Later you will be able to get those variables using `this.state.moduleName.variable`
-- `methods` - an object that contains custom methods. __key__ is __name__ of the method and __value__ is __method itself__. [More info](#create-methods)
-- `callbacks` - an object of callbacks or arrays of callbacks. __key__ is __event__ and __value__ is __callback function__ or __array of callback functions__. [More info](#attach-callbacks)
-- `commands` - an array of commands. [More info about commands](#add-commands)
-- `registered` - function which will be called when module is registered successfully
-- `dependencies` - an array of modules on which this module depends on
-
-`name` is required, all other fields are optional. Let's look at module example. The following module includes:
-- `testModule` name
-- `registered` function
-- `testProperty` additional PlayerObject property
-- `testMessage` state property
-- `sendTestMessage()` method
-- `playerJoin()` callback
-- `playerChat()` callbacks x2
-- `!test` command
-
-```js
-const testModule = {
-    name: 'testModule',
-    registered() {
-        console.log('testModule is ready!')
-    },
-    // Define additional properties of PlayerObject.
-    player: {
-        testProperty: 'testProperty of the player'
-    },
-    // Define default state of the module. We will be able to access this state object later.
-    defaultState: {
-        testMessage: 'This is a test message. Room is working properly'
-    },
-    methods: {
-        sendTestMessage() {
-            // Retrieve 'testMessage' from room state.
-            // The path is        'this.state.moduleName.variableName'.
-            // In our case, it is 'this.state.testModule.testMessage'.
-            this.sendChat(this.state.testModule.testMessage)
-        }
-    },
-    callbacks: {
-        playerJoin(player) {
-            this.sendChat('Type !test to get test message')
-        },
-        // Pass an array of callbacks.
-        playerChat: [
-            function (player, message) {
-                if (message == '!test') {
-                    executeCommand(player, 'test')
-                }
-            },
-            function (player, message) {
-                // Log all the messages.
-                console.log(`${player.name}: ${message}`)
-            }
-        ]
-    },
-    commands: [{
-        names: ['test'],
-        execute(player) {
-            this.sendTestMessage()
-            this.sendChat('Your test property is ' + player.testProperty)
-        }
-    }]
-}
-```
-
-Now we pass `modules` array to the room config:
-```js
-const room = haxilium({
-    roomName: 'Haxilium Room',
-    modules: [testModule]
-})
-```
-
-Ok, that was a lot of code. Let's analyze it in details.
-1. We define `name` property of the module which is set to `'testModule'`. It is name of the module which we will use later.
-2. `registered` lifecycle hook is a function which will be called when module is registered.
-3. `player` is an object which defines additional `PlayerObject` properties. [More info](#playerobject-extension).
-4. The next piece is `defaultState` object. We can see `testMessage` variable in it. Later, we will be able to retrieve this variable using `this.state.testModule.testMessage`.
-5. After `defaultState` we define `methods`. It is an object where __keys__ are __names__ of methods and __values__ are __methods__ themselves. Nothing special.
-6. Then we see `callbacks` object. Like `methods`, __keys__ are __names of events__ and __values__ are __callbacks__ or __arrays of callbacks__.
-7. The last field we have defined is `commands` array. It is array of command objects. Click [here](#add-commands) for detail info about commands.
-
-That's all! That is our module! Now, when player join the room he will see `'Type !test to get test message'`. Then, if he wants, he can write `!test` in chat and he will receive `'This is a test message. Room is working properly'` message. Also, we `console.log()` every message players send.
+# Module system
 
 
-### Afk module example
-Below you can see example of afk system module:
-```js
-import haxilium from 'haxilium'
+## Introduction
+Module is a class which is decorated with `Module()` decorator and it defines callbacks and commands as its methods:
+```ts
+import { Module, Player } from 'haxilium'
 
+@Module()
+class LoggingModule {
+    private logs: string[] = []
 
-// Define afk module.
-const afkModule = {
-    name: 'afk',
-    player: {
-        afk: false
-    },
-    callbacks: {
-        playerAfkChange(player) {
-            if (player.afk) this.sendChat(`${player.name} is afk`)
-            else            this.sendChat(`${player.name} is not afk`)
-        }
-    },
-    commands: [{
-        names: ['afk'],
-        execute(player, args) {
-            // Toggle afk state.
-            this.setPlayerAfk(player.id, !player.afk)
-        }
-    }, {
-        names: ['afks', 'afklist'],
-        execute(player, args) {
-            const afkNames = this.getPlayerList().filter(p => p.afk).map(p => p.name)
-            this.sendChat('Afk players: ' + afkNames.join(', '))
-        }
-    }]
-}
-
-// Create room and register modules.
-const room = haxilium({
-    roomName: 'Haxilium room',
-    modules: [afkModule]
-})
-
-// Register callback for command execution.
-room.on('playerChat', function (player, message) {
-    if (message[0] === '!') {
-        this.executeCommand(message.substr(1))
+    onPlayerJoin(player: Player) {
+        this.logs.push(`${player.name} has joined`)
     }
+
+    onPlayerLeave(player: Player) {
+        this.logs.push(`${player.name} has left`)
+    }
+}
+```
+
+Then you pass all your modules to the `modules` field in the `RoomConfig`:
+```ts
+const room = haxilium({
+    roomName: 'Room with modules',
+    modules: [LoggingModule]
 })
 ```
 
-Module is registered! Now players can use two (or three) commands: `!afk` and `!afklist` (or `!afks`).
+You can also define methods, fields and other stuff in the module class but I recommend not to use names which start with `on` to avoid collisions with callbacks.
+
+
+## Access room in a module
+To access the room object in the module, you have to define a constructor, which accepts a `Room` argument:
+```ts
+import { Module, Room, Player } from 'haxilium'
+
+@Module()
+class GreetingModule {
+    private $: Room
+
+    constructor($: Room) {
+        this.$ = $
+    }
+
+    onPlayerJoin(player: Player) {
+        this.$.sendChat(`Welcome, ${player.name}!`)
+    }
+}
+```
+Notice that
+```ts
+private $: Room
+
+constructor($: Room) {
+    this.$ = $
+}
+```
+can be rewritten as
+```ts
+constructor(private $: Room) { }
+```
+So the final version of `GreetingModule` will be:
+```ts
+import { Module, Room, Player } from 'haxilium'
+
+@Module()
+class GreetingModule {
+    constructor(private $: Room) { }
+
+    onPlayerJoin(player: Player) {
+        this.$.sendChat(`Welcome, ${player.name}!`)
+    }
+}
+```
+
+If you want to use custom player in your module, you have to pass the `Player` to the `Room` type annotation:
+```ts
+// Player.ts
+import { Player as PlayerBase } from 'haxilium'
+
+export class Player extends PlayerBase {
+    customField = false
+}
+
+// index.ts
+import { Module, Room } from 'haxilium'
+import { Player } from './Player.ts'
+
+
+@Module()
+class GreetingModule {
+    // Here is the change.
+    constructor(private $: Room<Player>) { }
+
+    onPlayerJoin(player: Player) {
+        this.$.sendChat(`Welcome, ${player.name}!`)
+    }
+}
+```
+
+
+## Add command
+To add a command, decorate a method with `Command(names: string|string[])` decorator. The method must accept two parameters:
+- `player: Player` - player who executes the command
+- `args: string[]` - an array of arguments which are passed to the `Room.executeCommand()` (it will be explained later)
+
+Example:
+```ts
+import { Module, Command, Player, Room } from 'haxilium'
+
+@Module()
+class LoggingModule {
+    private logs: string[] = []
+
+    constructor(private $: Room) { }
+
+    onPlayerJoin(player: Player) {
+        this.logs.push(`${player.name} has joined`)
+    }
+
+    onPlayerLeave(player: Player) {
+        this.logs.push(`${player.name} has left`)
+    }
+
+    @Command('printlogs')
+    pringLogs(player: Player, args: string[]) {
+        const len = parseInt(args[1]) || 5
+        const latestLogs = this.logs.reverse().slice(0, len)
+        for (const log of latestLogs) {
+            this.$.sendChat(log, player.id)
+        }
+    }
+}
+```
+The above command will send `len` latest logs to the chat.
+
+Also, you can define more than one name for a command:
+```ts
+@Module()
+class LoggingModule {
+    ...
+
+    @Command(['printlogs', 'getlogs'])
+    pringLogs(player: Player, args: string[]) { ... }
+
+    ...
+}
+```
+
+
+## Execute command
+To execute command, use `room.executeCommand(player: Player, command: string)`. Command will be parsed and passed to the appropriative method. Examples of parsed commands:
+- `printlogs 1` => `['printlogs', '1']`
+- `printlogs 1 2` => `['printlogs', '1', '2']`
+- `printlogs "1 2"` => `['printlogs', '1 2']`
+- `printlogs "1 \" 2"` => `['printlogs', '1 " 2']`
+
+As you can see, the name of the command is always the first argument.
+
+
+Now, use `Room.executeCommand()`. A message which starts with `!` will be interpreted as a command:
+```ts
+room.onPlayerChat = function (player: Player, message: string) {
+    if (message[0] === '!') {
+        // Remove the leading '!'.
+        const command = message.substring(1)
+        return room.executeCommand(player, command)
+    }
+}
+```
+If command does not exist, `UnknownCommandError` will be thrown, so it is good to catch that error:
+```ts
+import { UnknownCommandError } from 'haxilium'
+
+room.onPlayerChat = function (player: Player, message: string) {
+    if (message[0] === '!') {
+        // Remove the leading '!'.
+        const command = message.substring(1)
+        try {
+            return room.executeCommand(player, command)
+        } catch (err) {
+            if (err instanceof UnknownCommandError) {
+                // Notify player that command does not exist.
+                room.sendChat(err.message, player.id)
+            } else {
+                // Rethrow it.
+                throw err
+            }
+        }
+    }
+}
+```
+
+
+## Limit access to the command
+Often you want to limit access for specific commands. For example, only admins can kick players. So, you have to define roles and which player belongs to each role and then pass a second argument (boolean expression string) to the `Command()` decorator:
+```ts
+import haxilium, { Module, Command, Room, Player } from 'haxilium'
+
+@Module()
+class KickModule {
+    constructor(private $: Room) { }
+
+    @Command('kick', '>=admin')
+    kickPlayer(byPlayer: Player, args: stirng[]) {
+        const id = parseInt(args[1])
+        const reason = args[2]
+        this.$.kickPlayer(id, reason)
+        const kickedPlayer = this.$.getPlayer(id)
+        this.$.sendChat(`${kickedPlayer.name} was kicked by ${byPlayer.name}`)
+    }
+}
+
+const room = haxilium({
+    roles: { ingame: 0, admin: 1 }
+    getRoles: (player: Player) => [
+        player.admin ? 'admin' : '',
+        player.team !== Team.Spect ? 'ingame' : '',
+    ],
+    modules: [KickModule],
+})
+```
+
+Now, `kick` command will be able only to players who belongs to `admin` role. Usage:
+- `kick 1` - kick a player with id `1`
+- `kick 1 "very long afk"` - kick a player with id `1` and specify "very long afk" reason
+
+
+A second parameter of the `@Command()` decorator is a string which is a boolean expression. Available operators:
+- `==`, `!=`
+- `>`, `>=`
+- `<`, `<=`
+- `||`, `&&`
+- `()`  - parenthesis
+
+For example:
+- `>ingame && <admin` will allow command execution only for players whose role is __greater than__ `ingame` __AND less than__ `admin`
+- `<ingame || >admin` will allow command execution only for players whose role is __less than__ `ingame` __OR greater than__ `admin`.
+- `<ingame || (>ingame && <admin)` will allow command execution only for players whose role is either
+    - __less than__ `ingame` __OR__
+    - __greater than__ `ingame` __AND less than__ `admin`
+
+If player does not have enough rights to execute command, `AccessToCommandDeniedError` will be thrown. It is good to handle this:
+```ts
+import { UnknownCommandError, AccessToCommandDeniedError } from 'haxilium'
+
+room.onPlayerChat = function (player: Player, message: string) {
+    if (message[0] === '!') {
+        // Remove the leading '!'.
+        const command = message.substring(1)
+        try {
+            return room.executeCommand(player, command)
+        } catch (err) {
+            if (err instanceof UnknownCommandError) {
+                // Notify player that command does not exist.
+                room.sendChat(err.message, player.id)
+            } else if (err instanceof AccessToCommandDeniedError) {
+                // Notify player that he does not have rights to execute this command.
+                room.sendChat("You don't have enough rights to execute this command", player.id)
+            } else {
+                // Rethrow it.
+                throw err
+            }
+        }
+    }
+}
+```
+
+
+## Afk module example
+Below you can see example of an afk module:
+```ts
+import haxilium, { Module, Command, Event, Room, Player as PlayerBase } from 'haxilium'
+
+class Player extends PlayerBase {
+    @Event('playerAfkChange') afk = false
+}
+
+@Module()
+class AfkModule {
+    constructor(private $: Room<Player>) { }
+
+    @Command('afk')
+    setAfk(player: Player, args: string[]) {
+        player.afk = true
+    }
+
+    @Command(['back', 'here', 'notafk'])
+    unsetAfk(player: Player, args: string[]) {
+        player.afk = false
+    }
+
+    onPlayerAfkChange(player: Player) {
+        if (player.afk) this.$.sendChat(`${player.name} is afk`)
+        else            this.$.sendChat(`${player.name} is not afk`)
+    }
+}
+
+const room = haxilium({
+    roomName: 'Room with afk command',
+    Player: Player,
+    modules: [AfkModule],
+})
+
+// Execute command
+room.onPlayerChat = function (player: Player, message: string) {
+    if (message[0] === '!') {
+        const command = message.substring(1)
+        try {
+            return room.executeCommand(player, command)
+        } catch (err) {
+            if (err instanceof UnknownCommandError) {
+                room.sendChat(err.message, player.id)
+            } else if (err instanceof AccessToCommandDeniedError) {
+                room.sendChat("You don't have enough rights to execute this command", player.id)
+            } else {
+                throw err
+            }
+        }
+    }
+}
+```
 
 
 [Haxball Headless API]: https://github.com/haxball/haxball-issues/wiki/Headless-Host

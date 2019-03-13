@@ -1,17 +1,16 @@
 {
   "name": "haxilium",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Haxball Headless API Framework for easy and organized development.",
-  "main": "dist/bundle.js",
+  "main": "dist/index.js",
   "scripts": {
-    "dev": "npx webpack",
-    "watch": "npx webpack --watch",
-    "build": "npx webpack -p --output ./dist/bundle.js",
+    "watch": "npx tsc --watch",
+    "build": "npx tsc",
     "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/olegmisar/haxilium.js.git"
+    "url": "git+https://github.com/olegmisar/haxilium.git"
   },
   "keywords": [
     "haxilium",
@@ -22,21 +21,16 @@
   "author": "Misarosh Oleh <olegmisar@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/olegmisar/haxilium.js/issues"
+    "url": "https://github.com/olegmisar/haxilium/issues"
   },
-  "homepage": "https://github.com/olegmisar/haxilium.js#readme",
+  "homepage": "https://github.com/olegmisar/haxilium#readme",
   "dependencies": {
-    "assert": "^1.4.1",
-    "deep-freeze-strict": "^1.1.1",
-    "lodash": "^4.17.11",
-    "set-immediate-shim": "^2.0.0"
+    "@types/deep-freeze": "^0.1.1",
+    "@types/reflect-metadata": "^0.1.0",
+    "deep-freeze": "0.0.1",
+    "reflect-metadata": "^0.1.12"
   },
   "devDependencies": {
-    "@babel/core": "^7.1.2",
-    "@babel/preset-env": "^7.1.0",
-    "babel-loader": "^8.0.4",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "webpack": "^4.23.1",
-    "webpack-cli": "^3.1.2"
+    "typescript": "^3.2.2"
   }
 }
