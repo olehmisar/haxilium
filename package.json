@@ -4,7 +4,6 @@
   "description": "Haxball Headless API Framework for easy and organized development.",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "npx webpack",
     "watch": "npx tsc --watch",
     "build": "npx tsc",
     "prepublish": "npm run build"
