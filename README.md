@@ -1,4 +1,7 @@
 # Haxilium
+> __WARNING. This npm package is written in TypeScript. If you want to use older version which is written in JavaScript run__ `npm install haxilium@0.7.1`
+
+
 Haxball Headless API Framework for easy and organized development. Haxilium requires TypeScript to work. This provides strict typechecking and helps to avoid a lot of bugs on compile time.
 
 ```ts
