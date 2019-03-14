@@ -15,6 +15,7 @@ export class Room<TPlayer extends Player = Player, TRoles extends { [role: strin
     private readonly commands: { [name: string]: Command<TPlayer, TRoles> } = {}
     private readonly roles: TRoles
     private readonly getRoles: NonNullable<RoomConfig<TPlayer, TRoles>['getRoles']>
+    [callback: string]: any
 
     constructor(config: RoomConfig<TPlayer, TRoles>) {
         super(config)
