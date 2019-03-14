@@ -81,11 +81,15 @@ export class Room<TPlayer extends Player = Player, TRoles extends { [role: strin
 
     private createPlayerEvents() {
         for (const [prop, event] of getPropNamesWithEvents(this.Player.prototype)) {
-            const propSymbol = Symbol(prop)
+            const propSymbol = Symbol(prop) as keyof TPlayer
             const room = this
             Object.defineProperty(this.Player.prototype, prop, {
                 get() { return this[propSymbol] },
-                set(value: any) {
+                set(this: TPlayer, value: any) {
+                    if (!this.hasOwnProperty(propSymbol)) {
+                        this[propSymbol] = value
+                    }
+
                     if (this[propSymbol] !== value) {
                         this[propSymbol] = value
                         room.executeCallbacks(event, [this])
