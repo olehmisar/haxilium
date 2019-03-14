@@ -365,6 +365,73 @@ class GreetingModule {
 ```
 
 
+## Dependency injection
+Sometimes, a module can require other modules as its dependencies. For example, `NotifierModule` can require `PrettyChatModule`. It is not good to create modules by hand:
+```ts
+@Module()
+class PrettyChatModule {
+    constructor(private $: Room) { }
+    sendChatPretty(message: string) {
+        const prettyMessage = prettify(message)
+        this.$.sendChat(message)
+    }
+}
+
+@Module()
+class NotifierModule {
+    constructor(private $: Room) { }
+    notifyPlayers() {
+        // Here I want to use `PrettyChatModule.sendChatPretty()`.
+        // DON'T DO THIS. It is just for demonstration purposes.
+        // The right way of requiring `PrettyChatModule` is explained down there.
+        const prettyChat = new PrettyChatModule(this.$)
+        prettyChat.sendChatPretty('Some notification message')
+    }
+}
+```
+
+The above way of requiring another module as a dependency is bad because if we want to use the same dependency in two different modules we have to create a lot of instances of the same dependency:
+```ts
+@Module() class Dep { someDepMethod() { } }
+@Module() class A {
+    someMethod() {
+        // First instance.
+        new Dep().someDepMethod()
+    }
+}
+@Module() class B {
+    someMethod() {
+        // Second instance.
+        new Dep().someDepMethod()
+    }
+}
+```
+
+That's why Haxilium provides dependency injection (DI) for modules. To require a module, declare a constructor, which accepts that module as a parameter(like `private $: Room`):
+```ts
+@Module()
+class PrettyChatModule {
+    constructor(private $: Room) { }
+    sendChatPretty(message: string) {
+        const prettyMessage = prettify(message)
+        this.$.sendChat(message)
+    }
+}
+
+@Module()
+class NotifierModule {
+    // Define it here.
+    constructor(private prettyChat: PrettyChatModule) { }
+    notifyPlayers() {
+        // Use everywhere in the module.
+        this.prettyChat.sendChatPretty('Some notification message')
+    }
+}
+```
+
+This way of requiring modules as dependencies will guarantee that every module is created only __once__.
+
+
 ## Add command
 To add a command, decorate a method with `Command(names: string|string[])` decorator. The method must accept two parameters:
 - `player: Player` - player who executes the command
