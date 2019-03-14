@@ -105,6 +105,21 @@ room.onPlayerJoin = ''
 To see full list of events visit [this page][Haxball Headless API events].
 
 
+## Custom events
+To fire a custom event, use `Room.dispatchEvent(event: string, args: any[])`:
+```ts
+const room = haxilium({ ... })
+room.onPlayerJoin = function (player: Player) {
+    room.dispatchEvent('customPlayerJoin', ['Hello there'])
+}
+
+room.onCustomPlayerJoin = function (message: string) {
+    // message is "Hello there"
+    console.log(message)
+}
+```
+
+
 ## Improved `Room.getPlayerList()`
 There are 3 improvements in `Room.getPlayerList()` method:
 1. It will never return player with ID = 0. In other words, it will never return host player
