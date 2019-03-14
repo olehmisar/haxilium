@@ -58,7 +58,7 @@ class Player extends PlayerBase {
 
 const room = haxilium({
     Player: Player,
-    roles: { customRole: 0, ingame: 1, admin: 2 }
+    roles: { customRole: 0, ingame: 1, admin: 2 },
     getRoles: (player: Player) => [
         player.admin ? 'admin' : '',
         player.team !== Team.Spect ? 'ingame' : '',
