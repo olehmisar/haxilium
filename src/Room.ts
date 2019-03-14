@@ -107,6 +107,10 @@ export class Room<TPlayer extends Player = Player, TRoles extends { [role: strin
     }
 
     private createOrGetModule(ModuleClass: ConstructorOf<Module<TPlayer>>): Module<TPlayer> {
+        if (!Reflect.getMetadata('haxball-room:ismodule', ModuleClass))
+            throw new TypeError(`Cannot inject ${ModuleClass.name} because it is not a module`)
+
+
         let module = this.modules.find(module => module instanceof ModuleClass)
         if (module) return module
 

@@ -1,6 +1,8 @@
 import 'reflect-metadata';
 
-function noop() { }
+
 export function ModuleDecorator(): ClassDecorator {
-    return noop
+    return target => {
+        Reflect.defineMetadata('haxball-room:ismodule', true, target)
+    }
 }
