@@ -458,7 +458,7 @@ class LoggingModule {
     @Command('printlogs')
     pringLogs(player: Player, args: string[]) {
         const len = parseInt(args[1]) || 5
-        const latestLogs = this.logs.reverse().slice(0, len)
+        const latestLogs = this.logs.slice().reverse().slice(0, len)
         for (const log of latestLogs) {
             this.$.sendChat(log, player.id)
         }
@@ -480,9 +480,10 @@ class LoggingModule {
 }
 ```
 
+Names of commands are case insensitive: `kick`, `Kick` and `KiCK` are equal.
 
 ## Execute command
-To execute command, use `room.executeCommand(player: Player, command: string)`. Command will be parsed and passed to the appropriative method. Examples of parsed commands:
+To execute command, use `Room.executeCommand(player: Player, command: string)`. Command will be parsed and passed to the appropriative method. Examples of parsed commans:
 - `printlogs 1` => `['printlogs', '1']`
 - `printlogs 1 2` => `['printlogs', '1', '2']`
 - `printlogs "1 2"` => `['printlogs', '1 2']`
