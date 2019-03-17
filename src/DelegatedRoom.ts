@@ -99,7 +99,7 @@ export abstract class DelegatedRoom<TPlayer extends Player, TRoles extends { [ro
     private playerFilter(player: TPlayer, opts: Partial<TPlayer>): boolean {
         if (player.id === 0) return false
         for (const [key, filterValue] of <Entries<typeof opts>>Object.entries(opts)) {
-            if (player[key] === filterValue)
+            if (player[key] !== filterValue)
                 return false
         }
         return true
