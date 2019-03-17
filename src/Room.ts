@@ -30,6 +30,11 @@ export class Room<TPlayer extends Player = Player, TRoles extends { [role: strin
         this.executeCallbacks('on' + capitalize(event), args)
     }
 
+    getCommandMeta(name: string): any {
+        const command = this.commands[name]
+        return command && command.meta || null
+    }
+
     executeCommand(player: TPlayer, cmd: string) {
         const args = parseCommandString(cmd)
         const name = args[0] = args[0].toLowerCase()
@@ -63,14 +68,14 @@ export class Room<TPlayer extends Player = Player, TRoles extends { [role: strin
 
     private createCommands(module: Module<TPlayer>, ModuleClass: ConstructorOf<Module<TPlayer>>) {
         const commands = getModuleCommands(ModuleClass)
-        for (const [key, { names, access }] of commands) {
+        for (const [key, { names, access, meta }] of commands) {
             // TODO: replace this with compile time check.
             if (names.length === 0)
                 throw new TypeError(`Cannot create command in ${ModuleClass.name} module. command.names is an empty array`)
 
             const hasAccessFunc = !access ? () => true : parseAccessString(access, this.roles)
             // TODO: remove type assertion.
-            const command = new Command<TPlayer, TRoles>(names, hasAccessFunc, (module as any)[key].bind(module))
+            const command = new Command<TPlayer, TRoles>(names, hasAccessFunc, meta, (module as any)[key].bind(module))
             for (const name of command.names) {
                 if (this.commands[name])
                     throw new TypeError(`Cannot create command in ${ModuleClass.name} module. Command with ${name} name already exists`)

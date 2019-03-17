@@ -643,6 +643,40 @@ room.onPlayerChat = function (player: Player, message: string) {
 }
 ```
 
+## Meta information about command
+
+Sometimes, there are situations when you want to store some additional information about command. For examlpe, you want to make a `help` command, which shows players a `description` of each command. To store meta information about command, pass it as third argument to the `Command()` decorator and later retrieve it using `Room.getCommandMeta(name: string)`:
+
+```ts
+@Module()
+class CommandsModule {
+    constructor(private $: Room) { }
+
+    // Access string can be empty if you want command to be accessible to any player.
+    @Command('leave', '', {
+        description: 'Leave the room'
+    })
+    makePlayerLeave(player: Player, args: string[]) {
+        this.$.kickPlayer(player.id, 'Bye!')
+    }
+
+    @Command('help', '', {
+        description: 'Use `help <command>` to get help for specific <command>'
+    })
+    getHelp(player: Player, args: string[]) {
+        const commandName = (args[1] || '').toLowerCase()
+        const meta = this.$.getCommandMeta(commandName)
+        if (meta && meta.description) {
+            this.$.sendChat(meta.description)
+        } else {
+            this.$.sendChat(`Help for "${commandName}" command is unavailable`)
+        }
+    }
+}
+```
+
+Command meta has `any` type. It's your responsibility to check its type when you try to read it.
+
 ## Afk module example
 
 Below you can see example of an afk module:
