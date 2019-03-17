@@ -68,7 +68,7 @@ export class Room<TPlayer extends Player = Player, TRoles extends { [role: strin
             if (names.length === 0)
                 throw new TypeError(`Cannot create command in ${ModuleClass.name} module. command.names is an empty array`)
 
-            const hasAccessFunc = access === undefined ? () => true : parseAccessString(access, this.roles)
+            const hasAccessFunc = !access ? () => true : parseAccessString(access, this.roles)
             // TODO: remove type assertion.
             const command = new Command<TPlayer, TRoles>(names, hasAccessFunc, (module as any)[key].bind(module))
             for (const name of command.names) {
