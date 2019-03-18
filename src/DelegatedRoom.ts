@@ -65,7 +65,7 @@ export abstract class DelegatedRoom<TPlayer extends Player, TRoles extends { [ro
         return p === null ? null : this.wrapPlayer(p)
     }
 
-    getPlayerList(opts?: object): TPlayer[]
+    getPlayerList(opts?: Partial<TPlayer>): TPlayer[]
     getPlayerList(teamsOrder: [Team],        /**/ opts?: Partial<TPlayer>): [TPlayer[]]
     getPlayerList(teamsOrder: [Team, Team],  /**/ opts?: Partial<TPlayer>): [TPlayer[], TPlayer[]]
     getPlayerList(teamsOrder: [Team, Team, Team], opts?: Partial<TPlayer>): [TPlayer[], TPlayer[], TPlayer[]]
