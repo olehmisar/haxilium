@@ -58,6 +58,8 @@ export abstract class DelegatedRoom<TPlayer extends Player, TRoles extends { [ro
      * =====================
      */
 
+    getPlayer(id: 0): TPlayer
+    getPlayer(id: number): TPlayer | null
     getPlayer(id: number): TPlayer | null {
         const p: NativePlayer = this.room.getPlayer(id)
         return p === null ? null : this.wrapPlayer(p)
