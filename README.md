@@ -1,8 +1,8 @@
 # Haxilium
 
-> __WARNING. This npm package is written in TypeScript. If you want to use older version which is written in JavaScript run__ `npm install haxilium@0.7.1`
+> __WARNING. This npm package is written in TypeScript. If you want to use an older version which is written in JavaScript run__ `npm install haxilium@0.7.1`
 
-Haxball Headless API Framework for easy and organized development. Haxilium requires TypeScript to work. This provides strict typechecking and helps to avoid a lot of bugs on compile time.
+Haxball Headless API Framework for easy and organized development. Haxilium requires TypeScript to work. This provides strict type checking and helps to avoid a lot of bugs on compile time.
 
 ```ts
 import haxilium, { Player } from 'haxilium'
@@ -16,7 +16,7 @@ room.onPlayerJoin = function (player: Player) {
 
 # Installation
 
-Use following command to install Haxilium:
+Use the following command to install Haxilium:
 
 ```shell
 npm install haxilium
@@ -44,11 +44,11 @@ const room = haxilium({
 })
 ```
 
-The above code will create a __public__ haxball room with "__Haxilium Room__" name , "__Haxilium Bot__" player(bot) name, maximum amount of players of __10__ and with geolocation of __England__.
+The above code will create a __public__ haxball room with "__Haxilium Room__" name, "__Haxilium Bot__" player(bot) name, the maximum amount of players of __10__ and with geolocation of __England__.
 
 ## `RoomConfig`
 
-`RoomConfig` is the same as in [Haxball Headless API]. You can look at description of room config [here][Haxball Headless API room config].
+`RoomConfig` is the same as in [Haxball Headless API]. You can look at the description of room config [here][Haxball Headless API room config].
 
 ## Custom `Player` model
 
@@ -93,7 +93,7 @@ room.onPlayerCustomFieldChange = function (player: Player) {
 
 [Full list of events][Haxball Headless API events]
 
-To attach callback to, for example, `playerJoin` event, use the following code:
+To attach a callback to, for example, `playerJoin` event, use the following code:
 
 ```ts
 room.onPlayerJoin = function (player: Player) {
@@ -114,7 +114,7 @@ room.onPlayerJoin = 0
 room.onPlayerJoin = ''
 ```
 
-To see full list of events visit [this page][Haxball Headless API events].
+To see a full list of events visit [this page][Haxball Headless API events].
 
 ## Custom events
 
@@ -170,7 +170,7 @@ Creating commands is very simple with Haxilium. Just use `addCommand(command: Co
 - `execute(player: PlayerObject, args: string[]): function` - the command function itself. Accepts `PlayerObject` who executes command as first parameter and `args` array as second parameter
 - `access: string` - boolean expression which determines if player can or cannot execute this command. Optional. [More info](#player-roles)
 
-We will make command that adds two numbers provided by player. For example: `add 2 5` will send `'2 + 5 = 7'` message to the player. Now let's look at code:
+We will make command that adds two numbers provided by a player. For example: `add 2 5` will send `'2 + 5 = 7'` message to the player. Now let's look at the code:
 ```ts
 room.addCommand({
     names: ['add'],
@@ -202,7 +202,7 @@ __NOTE__ that we pass a `string` to the `executeCommand(player, command)`. For e
 
 
 ## Player roles
-When we are going to make a big project, we want to make roles for players. For example, we don't want `!kick` command to be available for every player but only for admins. So, we introduce roles in our project. All roles are specified in config under the `roles` field and are an array similar to this: `['player', 'admin']`. Roles array is an hierarchy where roles that has smaller index are lower in the hierarchy table. In our array `'player'` < `'admin'` because `'player'` has smaller index than `'admin'` in `['player', 'admin']` array. To calculate role for every player we specify `getRole(player: PlayerObject)` in config:
+When we are going to make a big project, we want to make roles for players. For example, we don't want `!kick` command to be available for every player but only for admins. So, we introduce roles in our project. All roles are specified in config under the `roles` field and are an array similar to this: `['player', 'admin']`. Roles array is a hierarchy where roles that have smaller index are lower in the hierarchy table. In our array `'player'` < `'admin'` because `'player'` has smaller index than `'admin'` in `['player', 'admin']` array. To calculate role for every player we specify `getRole(player: PlayerObject)` in config:
 ```ts
 import haxilium from 'haxilium'
 
@@ -246,7 +246,7 @@ Also, you can make more complicated `access` strings. Available operators are: `
 
 
 ## Get commands
-It is useful to retrieve commands when we need them. For example, we are going to make user-friendly bot that has `!help` command in it. We use `getCommand(name: string)` to get command by name and `getCommands(filterFn: function)` to get all commands which match `filterFn` function:
+It is useful to retrieve commands when we need them. For example, we are going to make a user-friendly bot that has `!help` command in it. We use `getCommand(name: string)` to get command by name and `getCommands(filterFn: function)` to get all commands which match `filterFn` function:
 ```ts
 // Add '!afk' command.
 room.addCommand({
@@ -278,13 +278,13 @@ room.addCommand({
 })
 ```
 
-Now, if player types `!help afk` in chat, he will get `'Toggle your afk status'` help message. And when he writes just `!help` command he will get full list of commands which provide help messages. -->
+Now, if the player types `!help afk` in chat, he will get `'Toggle your afk status'` help message. And when he writes just `!help` command he will get a full list of commands which provide help messages. -->
 
 # Module system
 
 ## Introduction
 
-Module is a class which is decorated with `Module()` decorator and it defines callbacks and commands as its methods:
+A module is a class which is decorated with `Module()` decorator and it defines callbacks and commands as its methods:
 
 ```ts
 import { Module, Player } from 'haxilium'
@@ -366,7 +366,7 @@ class GreetingModule {
 }
 ```
 
-If you want to use custom player in your module, you have to pass the `Player` to the `Room` type annotation:
+If you want to use a custom player in your module, you have to pass the `Player` to the `Room` type annotation:
 
 ```ts
 // Player.ts
@@ -466,7 +466,7 @@ This way of requiring modules as dependencies will guarantee that every module i
 
 To add a command, decorate a method with `Command(names: string|string[])` decorator. The method must accept two parameters:
 
-- `player: Player` - player who executes the command
+- `player: Player` - a player who executes the command
 - `args: string[]` - an array of arguments
 
 Example:
@@ -517,7 +517,7 @@ class LoggingModule {
 
 Names of commands are case insensitive: `kick`, `Kick` and `KiCK` are equal.
 
-## Execute command
+## Execute a command
 
 To execute command, use `Room.executeCommand(player: Player, command: string)`. Command will be parsed and passed to the appropriative method. Examples of parsed commans:
 
@@ -540,7 +540,7 @@ room.onPlayerChat = function (player: Player, message: string) {
 }
 ```
 
-If command does not exist, `UnknownCommandError` will be thrown, so it is good to catch that error:
+If a command does not exist, `UnknownCommandError` will be thrown, so it is good to catch that error:
 
 ```ts
 import { UnknownCommandError } from 'haxilium'
@@ -595,7 +595,7 @@ const room = haxilium({
 })
 ```
 
-Now, `kick` command will be available only to players who belongs to `admin` role. Usage:
+Now, `kick` command will be available only to players who belong to `admin` role. Usage:
 
 - `kick 1` - kick a player with id `1`
 - `kick 1 "very long afk"` - kick a player with id `1` and specify "very long afk" reason
@@ -616,7 +616,7 @@ For example:
     - __less than__ `ingame` __OR__
     - __greater than__ `ingame` __AND less than__ `admin`
 
-If player does not have enough rights to execute command, `AccessToCommandDeniedError` will be thrown. It is good to handle this:
+If a player does not have enough rights to execute a command, `AccessToCommandDeniedError` will be thrown. It is good to handle this:
 
 ```ts
 import { UnknownCommandError, AccessToCommandDeniedError } from 'haxilium'
@@ -643,16 +643,16 @@ room.onPlayerChat = function (player: Player, message: string) {
 }
 ```
 
-## Meta information about command
+## Meta information about a command
 
-Sometimes, there are situations when you want to store some additional information about command. For examlpe, you want to make a `help` command, which shows players a `description` of each command. To store meta information about command, pass it as third argument to the `Command()` decorator and later retrieve it using `Room.getCommandMeta(name: string)`:
+Sometimes, there are situations when you want to store some additional information about a command. For example, you want to make a `help` command, which shows players a `description` of each command. To store meta information about the command, pass it as the third argument to the `Command()` decorator and later retrieve it using `Room.getCommandMeta(name: string)`:
 
 ```ts
 @Module()
 class CommandsModule {
     constructor(private $: Room) { }
 
-    // Access string can be empty if you want command to be accessible to any player.
+    // Access string can be empty if you want the command to be accessible to any player.
     @Command('leave', '', {
         description: 'Leave the room'
     })
@@ -679,7 +679,7 @@ Command meta has `any` type. It's your responsibility to check its type when you
 
 ## Afk module example
 
-Below you can see example of an afk module:
+Below you can see an example of an afk module:
 
 ```ts
 import haxilium, { Module, Command, Event, Room, Player as PlayerBase } from 'haxilium'
